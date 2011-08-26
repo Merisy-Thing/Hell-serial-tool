@@ -32,6 +32,8 @@ private slots:
     void on_pb_record_raw_data_clicked();
     void on_pte_out_hex_selectionChanged();
     void on_pte_out_ascii_selectionChanged();
+    void on_pb_about_clicked();
+    void on_pb_always_visible_clicked();
 
 private:
     Ui::hell_serial *ui;

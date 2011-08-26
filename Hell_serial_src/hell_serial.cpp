@@ -127,6 +127,17 @@ void hell_serial::ui_init()
     ui->pb_record_raw_data->setEnabled(false);
 }
 
+void hell_serial::on_pb_about_clicked()
+{
+    QMessageBox::about(this, tr("About "),
+                       tr("A Simple Serial Tool (Qt 4.7.3)"
+                          "\r\nCreat by: pajoke"
+                          "\r\nE_Mail: pajoke@163.com"
+                          "\r\n======================"
+                          "\r\nCode base on \"QExtSerialPort\" Class"
+                          ));
+}
+
 void hell_serial::on_pb_port_ctrl_clicked()
 {
     if(m_serial_port.isOpen()) {
@@ -407,22 +418,17 @@ void hell_serial::on_pte_out_ascii_selectionChanged()
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void hell_serial::on_pb_always_visible_clicked()
+{
+    if(this->windowFlags() & Qt::WindowStaysOnTopHint) {
+        //hide();
+        setWindowFlags(this->windowFlags() & (~Qt::WindowStaysOnTopHint));
+        show();
+        ui->pb_always_visible->setText(tr("Always visible"));
+    } else {
+        //hide();
+        setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
+        show();
+        ui->pb_always_visible->setText(tr("unAlways"));
+    }
+}

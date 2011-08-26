@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>632</width>
+    <width>600</width>
     <height>541</height>
    </rect>
   </property>
@@ -26,7 +26,7 @@
    <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>Serial Tool --- Creat by Hell With Qt4.x</string>
+   <string>Hell Serial Tool</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="margin">
@@ -260,6 +260,20 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_always_visible">
+       <property name="text">
+        <string>Always visible</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_about">
+       <property name="text">
+        <string>About</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -37,5 +37,6 @@ void receive_thread::run()
 
             emit dataReceived(data);
         }
+        usleep(10);
     }
 }
