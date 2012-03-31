@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QRegExp>
 
 #define POLL_INTERVAL       200  /*Unit: ms*/
 #define TIME_OUT            10   /*Unit: ms*/
@@ -11,6 +12,9 @@
 #define SELECT_FILTED               0
 #define SELECT_CHANGED_FROM_HEX     1
 #define SELECT_CHANGED_FROM_ASCII   2
+
+#define MAX_CUSTOM_CMD_NUM          64
+#define CUSTOM_CMD_FILE_NAME        "custom_cmd_list.ini"
 
 hell_serial::hell_serial(QWidget *parent) :
     QDialog(parent), ui(new Ui::hell_serial)
@@ -24,6 +28,12 @@ hell_serial::hell_serial(QWidget *parent) :
 
     line_feed = 0;
     select_changed = SELECT_FILTED;
+
+    is_ascii_mode = false;
+    ui->pte_out_ascii_mode->setVisible(false);
+    this->setMaximumWidth(600);
+    this->setWindowFlags(Qt::WindowMinimizeButtonHint);
+    this->show();
 
     rec_thread = new receive_thread(m_serial_port);
     connect(rec_thread, SIGNAL(dataReceived(const QByteArray &)),
@@ -42,6 +52,24 @@ hell_serial::~hell_serial()
 
     if(record_file.isOpen()) {
        record_file.close();
+    }
+
+    if(m_setting_file != NULL) {
+        m_setting_file->beginGroup("Cmd_List");
+        QString cmd;
+        int index = 0;
+        for(int i=0; i<ui->cb_custom_cmd_list->count(); i++) {
+            if(index >= MAX_CUSTOM_CMD_NUM) {
+                break;
+            }
+            cmd = ui->cb_custom_cmd_list->itemText(i);
+            if(cmd.isEmpty()) {
+                continue;
+            }
+            m_setting_file->setValue("Cmd_"+QString::number(index++), cmd);
+        }
+        m_setting_file->endGroup();
+        m_setting_file->sync();
     }
 
     delete ui;
@@ -113,18 +141,47 @@ void hell_serial::ui_init()
 
     ui->pte_out_hex->setStyleSheet(QString::fromUtf8("background-color:Black; color:green"));
     ui->pte_out_ascii->setStyleSheet(QString::fromUtf8("background-color:Black; color:red"));
-
+    ui->pte_out_ascii_mode->setStyleSheet(QString::fromUtf8("background-color:Black; color:green"));
     //buffer_len
     string = "%1";
-    for(int i=512; i<= 4096; i+=512) {
+    for(int i=512; i<= 4096*4; i+=1024) {
         ui->cb_buffer_len->insertItem(i/512-1, string.arg(i));
     }
     ui->cb_buffer_len->setCurrentIndex(0);
     buffer_len = 512;
+    ui->pte_out_ascii_mode->setMaximumBlockCount(512);
 
     ui->pb_save_raw_data->setEnabled(false);
     ui->pb_send_file->setEnabled(false);
     ui->pb_record_raw_data->setEnabled(false);
+
+    QFile setting_file(CUSTOM_CMD_FILE_NAME);
+    if(setting_file.exists()) {
+        m_setting_file = new QSettings(CUSTOM_CMD_FILE_NAME, QSettings::IniFormat);
+        m_setting_file->beginGroup("Cmd_List");
+        QString cmd;
+        for(int i=0; i<MAX_CUSTOM_CMD_NUM; i++) {
+            cmd = m_setting_file->value("Cmd_"+QString::number(i)).toString();
+            if(cmd.isEmpty()) {
+                break;
+            }
+            m_custom_cmd_string_list.push_back(cmd);
+        }
+        m_setting_file->endGroup();
+    } else {
+        if(setting_file.open(QIODevice::WriteOnly)) {
+            setting_file.close();
+            m_setting_file = new QSettings(CUSTOM_CMD_FILE_NAME, QSettings::IniFormat);
+        } else {
+            m_setting_file = NULL;
+        }
+        m_custom_cmd_string_list.clear();
+    }
+    if(m_custom_cmd_string_list.size() > 0) {
+        ui->cb_custom_cmd_list->addItems(m_custom_cmd_string_list);
+    }
+
+    ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
 }
 
 void hell_serial::on_pb_about_clicked()
@@ -190,6 +247,8 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
     const char bin2hex[] = "0123456789ABCDEF";
     uchar ch;
 
+    ui->pte_out_ascii_mode->insertPlainText(QString(dataReceived));
+
     for(int i=0; i<dataReceived.size(); i++) {
         ch = dataReceived[i];
 
@@ -206,6 +265,7 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
             receive_buffer_ascii += "\r\n";
         }
     }
+
     receive_buffer_raw += dataReceived;
     if(receive_buffer_raw.size() > buffer_len) {
         receive_buffer_raw.remove(0, receive_buffer_raw.size()%buffer_len);
@@ -244,12 +304,23 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
             qDebug("Key_Space");
             c.push_back(' ');
             break;
+            break;
         default :
-            c.push_back(event->text().toAscii());
+            QByteArray key_code = event->text().toAscii();
+            if(key_code.at(0) == '\r') {
+                if(ui->cbx_line_feed_mode->isChecked()) {
+                    c.push_back('\r');
+                    c.push_back('\n');
+                } else {
+                    c.push_back('\r');
+                }
+            } else {
+                c.push_back(key_code);
+            }
             //qDebug("%s",event->text().toAscii().data());
             break ;
         }
-        m_serial_port.write(c,1);
+        m_serial_port.write(c);
     }
 }
 
@@ -269,6 +340,7 @@ void hell_serial::on_cb_buffer_len_currentIndexChanged(const QString &len)
 {
     //qDebug("%s", arg1.toAscii().data());
     buffer_len = len.toInt();
+    ui->pte_out_ascii_mode->setMaximumBlockCount(len.toInt());
 }
 
 void hell_serial::on_pb_save_raw_data_clicked()
@@ -307,6 +379,7 @@ void hell_serial::on_pb_send_file_clicked()
         return;
     }
     QByteArray file_data = file.readAll();
+    file.close();
 
     ui->pb_port_ctrl->setEnabled(false);
     rec_thread->stopReceiving();
@@ -431,4 +504,115 @@ void hell_serial::on_pb_always_visible_clicked()
         show();
         ui->pb_always_visible->setText(tr("unAlways"));
     }
+}
+
+void hell_serial::add_custom_cmd_to_list(QString cmd)
+{
+    if(!m_custom_cmd_string_list.contains(cmd)) {
+        m_custom_cmd_string_list.push_back(cmd);
+        ui->cb_custom_cmd_list->insertItem(0, cmd);
+    } else {
+
+
+        int index = ui->cb_custom_cmd_list->findText(cmd);
+        if(index >=0 ) {
+            ui->cb_custom_cmd_list->removeItem(index);
+            ui->cb_custom_cmd_list->insertItem(0,cmd);
+            ui->cb_custom_cmd_list->setCurrentIndex(0);
+        } else {
+            qDebug("can't found text = %s", cmd.toAscii().data());
+        }
+    }
+}
+
+void hell_serial::on_pb_hex_send_clicked()
+{
+    QString cmd = ui->cb_custom_cmd_list->currentText();
+    if(cmd.isEmpty()) {
+        return;
+    }
+    QString cmd_backup = cmd;
+
+    //qDebug("cmd = %s", cmd.toAscii().data());
+
+    //eat comment
+    if(cmd.contains("//")) {
+        cmd = cmd.left(cmd.indexOf("//"));
+    }
+    if(cmd.isEmpty()) {
+        return;
+    }
+
+    //remove space char
+    cmd.remove(QChar(' '), Qt::CaseSensitive);
+    if(cmd.isEmpty()) {
+        return;
+    }
+
+    //odd number
+    if(cmd.size() & 1) {
+        QMessageBox::warning(this, tr("Error"), tr("Invalid data length, [Odd] length!"), QMessageBox::Yes );
+        return;
+    }
+
+    if(cmd.contains(QRegExp("[^0-9,A-F,a-f]"))) {
+        QMessageBox::warning(this, tr("Error"), tr("Invalid data format, 0-9,A-F,a-f chars need!"), QMessageBox::Yes );
+        return;
+    }
+
+    QByteArray raw_data;
+    for(int i=0; i<cmd.size(); i+=2) {
+        bool ok;
+        char hex = (char)cmd.mid(i, 2).toUInt(&ok, 16);
+        if(ok) {
+            raw_data.push_back(hex);
+        }
+    }
+
+    if(m_serial_port.isOpen()) {
+        add_custom_cmd_to_list(cmd_backup);
+        m_serial_port.write(raw_data);
+    }
+
+    //qDebug("cmd = %s", cmd.toAscii().data());
+}
+
+void hell_serial::on_pb_ascii_send_clicked()
+{
+    QString cmd = ui->cb_custom_cmd_list->currentText();
+    if(cmd.isEmpty()) {
+        return;
+    }
+
+    if(m_serial_port.isOpen()) {
+        add_custom_cmd_to_list(cmd);
+        m_serial_port.write(cmd.toAscii().data());
+    }
+}
+
+void hell_serial::on_pb_mode_switch_clicked()
+{
+    if(is_ascii_mode) {
+        is_ascii_mode = false;
+        ui->pb_mode_switch->setText("ASCII Mode");
+
+        ui->pte_out_ascii->setVisible(true);
+        ui->pte_out_hex->setVisible(true);
+        ui->pte_out_ascii_mode->setVisible(false);
+
+        this->setMaximumWidth(600);
+        this->setWindowFlags(this->windowFlags() & (~Qt::WindowMaximizeButtonHint));
+        this->show();
+    } else {
+        is_ascii_mode = true;
+        ui->pb_mode_switch->setText("HEX Mode");
+
+        ui->pte_out_ascii->setVisible(false);
+        ui->pte_out_hex->setVisible(false);
+        ui->pte_out_ascii_mode->setVisible(true);
+        this->setMaximumWidth(QWIDGETSIZE_MAX);
+        this->setWindowFlags(this->windowFlags() | Qt::WindowMaximizeButtonHint);
+        this->show();
+    }
+    //this->windowFlags() & (~Qt::WindowStaysOnTopHint)
 }

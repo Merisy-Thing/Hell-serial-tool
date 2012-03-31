@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QMap>
 #include <QTimer>
+#include <QSettings>
 
 #include "qextserialport.h"
 #include "receive_thread.h"
@@ -34,6 +35,9 @@ private slots:
     void on_pte_out_ascii_selectionChanged();
     void on_pb_about_clicked();
     void on_pb_always_visible_clicked();
+    void on_pb_hex_send_clicked();
+    void on_pb_ascii_send_clicked();
+    void on_pb_mode_switch_clicked();
 
 private:
     Ui::hell_serial *ui;
@@ -55,6 +59,13 @@ private:
     QMap<QString, int> m_data_bits_map;
     QMap<QString, int> m_parity_map;
     QMap<QString, int> m_stop_bits_map;
+
+    QSettings *m_setting_file;
+    QStringList m_custom_cmd_string_list;
+
+    bool is_ascii_mode;
+
+    void add_custom_cmd_to_list(QString cmd);
 
 protected:
     void keyPressEvent ( QKeyEvent * event );
