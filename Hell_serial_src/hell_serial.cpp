@@ -108,7 +108,7 @@ void hell_serial::ui_init()
     string = "%1";
     for(int i=5; i<=8; i++) {
         ui->cb_data_bits->insertItem(i-5, string.arg(i));
-        m_data_bits_map[string.arg(i)] = i;
+        //m_data_bits_map[string.arg(i)] = i;
     }
     ui->cb_data_bits->setCurrentIndex(3);
 
@@ -221,7 +221,7 @@ void hell_serial::on_pb_port_ctrl_clicked()
         m_serial_port.setPortName(ui->cb_port_name->currentText());
         if(m_serial_port.open(QIODevice::ReadWrite)) {
             m_serial_port.setBaudRate((BaudRateType)m_baudrate_map[ui->cb_baudrate->currentText()]);
-            m_serial_port.setDataBits((DataBitsType)m_data_bits_map[ui->cb_data_bits->currentText()]);
+            m_serial_port.setDataBits((DataBitsType)ui->cb_data_bits->currentIndex());
             m_serial_port.setParity((ParityType)m_parity_map[ui->cb_parity->currentText()]);
             m_serial_port.setStopBits((StopBitsType)m_stop_bits_map[ui->cb_stop_bits->currentText()]);
             m_serial_port.setFlowControl(FLOW_OFF);
@@ -247,6 +247,11 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
     const char bin2hex[] = "0123456789ABCDEF";
     uchar ch;
 
+    QTextCursor cursor;
+
+    cursor = ui->pte_out_ascii_mode->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    ui->pte_out_ascii_mode->setTextCursor(cursor);
     ui->pte_out_ascii_mode->insertPlainText(QString(dataReceived));
 
     for(int i=0; i<dataReceived.size(); i++) {
@@ -281,7 +286,7 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
     }
     ui->pte_out_hex->setPlainText(receive_buffer_hex);
 
-    QTextCursor cursor = ui->pte_out_hex->textCursor();
+    cursor = ui->pte_out_hex->textCursor();
     cursor.movePosition(QTextCursor::End);
     ui->pte_out_hex->setTextCursor(cursor);
 

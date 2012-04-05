@@ -56,7 +56,7 @@ private:
     QFile record_file;
 
     QMap<QString, int> m_baudrate_map;
-    QMap<QString, int> m_data_bits_map;
+    //QMap<QString, int> m_data_bits_map;
     QMap<QString, int> m_parity_map;
     QMap<QString, int> m_stop_bits_map;
 
