@@ -339,6 +339,7 @@ void hell_serial::on_pb_clear_clicked()
 
     ui->pte_out_hex->clear();
     ui->pte_out_ascii->clear();
+    ui->pte_out_ascii_mode->clear();
 }
 
 void hell_serial::on_cb_buffer_len_currentIndexChanged(const QString &len)
