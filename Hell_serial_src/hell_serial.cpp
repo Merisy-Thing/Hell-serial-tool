@@ -114,14 +114,14 @@ void hell_serial::ui_init()
 
     //Parity Type
     string_list.clear();
-    string_list << tr("NONE") << tr("ODD") << tr("EVEN") << tr("SPACE");
+    string_list << tr("NONE") << tr("ODD") << tr("EVEN") << tr("MARK") << tr("SPACE");
     index = PAR_NONE;
     for(int i=0; i<string_list.size(); i++) {
         ui->cb_parity->insertItem(i, string_list.at(i));
         m_parity_map[string_list.at(i)] = index;
         index++;
     }
-    ui->cb_parity->setMaxVisibleItems(4);
+    ui->cb_parity->setMaxVisibleItems(5);
     ui->cb_parity->setCurrentIndex(0);
 
     //Stop bits
