@@ -24,6 +24,8 @@ public:
 
 private slots:
     void dataReceived(const QByteArray &dataReceived);
+    void hex_send();
+    void ascii_send();
 
     void on_pb_port_ctrl_clicked();
     void on_pb_clear_clicked();
@@ -35,9 +37,10 @@ private slots:
     void on_pte_out_ascii_selectionChanged();
     void on_pb_about_clicked();
     void on_pb_always_visible_clicked();
-    void on_pb_hex_send_clicked();
-    void on_pb_ascii_send_clicked();
     void on_pb_mode_switch_clicked();
+    void on_chb_AutoRepeat_clicked(bool checked);
+    void on_pb_hex_send_clicked(bool checked);
+    void on_pb_ascii_send_clicked(bool checked);
 
 private:
     Ui::hell_serial *ui;
@@ -53,6 +56,9 @@ private:
     int buffer_len;
     int select_changed;
 
+    QTimer m_hex_send_autorepeat_timer;
+    QTimer m_ascii_send_autorepeat_timer;
+
     QFile record_file;
 
     QMap<QString, int> m_baudrate_map;
@@ -66,6 +72,7 @@ private:
     bool is_ascii_mode;
 
     void add_custom_cmd_to_list(QString cmd);
+    int  get_sampling_time(QString time_str);
 
 protected:
     void keyPressEvent ( QKeyEvent * event );

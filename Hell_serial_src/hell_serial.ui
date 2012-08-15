@@ -211,14 +211,71 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="lb_dbg">
+      <widget class="QCheckBox" name="chb_AutoRepeat">
        <property name="text">
-        <string>length</string>
+        <string>AutoRepeat</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cb_buffer_len"/>
+      <widget class="QComboBox" name="cb_autorepeat_interval">
+       <property name="toolTip">
+        <string>Case sensitive
+ms: millisecond
+S:second</string>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>10ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>200ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>500ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1S</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2S</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5S</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10S</string>
+        </property>
+       </item>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pb_clear">
@@ -296,14 +353,14 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="cbx_line_feed_mode">
+      <widget class="QLabel" name="lb_dbg">
        <property name="text">
-        <string>\r\n</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>length</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_buffer_len"/>
      </item>
      <item>
       <widget class="QPushButton" name="pb_mode_switch">
@@ -335,7 +392,7 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>16777215</width>
+         <width>40</width>
          <height>16777215</height>
         </size>
        </property>
@@ -415,6 +472,16 @@
        </property>
        <property name="text">
         <string>Ascii Send</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cbx_line_feed_mode">
+       <property name="text">
+        <string>\r\n</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

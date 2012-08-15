@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QRegExp>
+#include <QDate>
 
 #define POLL_INTERVAL       200  /*Unit: ms*/
 #define TIME_OUT            10   /*Unit: ms*/
@@ -38,6 +39,13 @@ hell_serial::hell_serial(QWidget *parent) :
     rec_thread = new receive_thread(m_serial_port);
     connect(rec_thread, SIGNAL(dataReceived(const QByteArray &)),
             this,       SLOT(dataReceived(const QByteArray &)));
+
+    connect(&m_hex_send_autorepeat_timer, SIGNAL(timeout ()),
+            this,       SLOT(hex_send()));
+    connect(&m_ascii_send_autorepeat_timer, SIGNAL(timeout ()),
+            this,       SLOT(ascii_send()));
+
+    this->setWindowTitle(QString("Hell Serial Tool - ") + __DATE__);
 }
 
 hell_serial::~hell_serial()
@@ -531,7 +539,59 @@ void hell_serial::add_custom_cmd_to_list(QString cmd)
     }
 }
 
-void hell_serial::on_pb_hex_send_clicked()
+int hell_serial::get_sampling_time(QString time_str)
+{
+    int num = 0, factor = 0;
+    bool ok = false;
+
+    if(time_str.right(2) == "ms"){
+        num = time_str.left(time_str.length()-2).toInt(&ok);
+        factor = 1;//ms base
+        if(!ok) {
+            ui->cb_autorepeat_interval->setCurrentIndex(2);
+            return 100;
+        }
+    } else if(time_str.right(1) == "S"){
+        num = time_str.left(time_str.length()-1).toInt(&ok);
+        factor = 1000;//S base
+        if(!ok) {
+            ui->cb_autorepeat_interval->setCurrentIndex(2);
+            return 100;
+        }
+    } else {
+        ui->cb_autorepeat_interval->setCurrentIndex(2);
+        return 100;
+    }
+
+    if(ok) {
+        //qDebug("get_sampling_time = %d", num * factor);
+        return num * factor;
+    } else {
+        //ui->cb_autorepeat_interval->setCurrentIndex(2);
+        qDebug("get_sampling_time faile 100 default");
+        return 100;
+    }
+}
+void hell_serial::on_pb_hex_send_clicked(bool checked)
+{
+    //m_hex_send_autorepeat_timer
+
+    if(ui->pb_hex_send->isCheckable()) {
+        if(checked){
+            if(m_ascii_send_autorepeat_timer.isActive()) {
+                ui->pb_hex_send->setChecked(false);
+            } else {
+                m_hex_send_autorepeat_timer.setInterval(get_sampling_time(ui->cb_autorepeat_interval->currentText()));
+                m_hex_send_autorepeat_timer.start();
+            }
+        } else {
+            m_hex_send_autorepeat_timer.stop();
+        }
+    } else {
+        hex_send();
+    }
+}
+void hell_serial::hex_send()
 {
     QString cmd = ui->cb_custom_cmd_list->currentText();
     if(cmd.isEmpty()) {
@@ -583,7 +643,25 @@ void hell_serial::on_pb_hex_send_clicked()
     //qDebug("cmd = %s", cmd.toAscii().data());
 }
 
-void hell_serial::on_pb_ascii_send_clicked()
+
+void hell_serial::on_pb_ascii_send_clicked(bool checked)
+{
+    if(ui->pb_ascii_send->isCheckable()) {
+        if(checked){
+            if(m_hex_send_autorepeat_timer.isActive()) {
+                ui->pb_ascii_send->setChecked(false);
+            } else {
+                m_ascii_send_autorepeat_timer.setInterval(get_sampling_time(ui->cb_autorepeat_interval->currentText()));
+                m_ascii_send_autorepeat_timer.start();
+            }
+        } else {
+            m_ascii_send_autorepeat_timer.stop();
+        }
+    } else {
+        ascii_send();
+    }
+}
+void hell_serial::ascii_send()
 {
     QString cmd = ui->cb_custom_cmd_list->currentText();
     if(cmd.isEmpty()) {
@@ -622,3 +700,15 @@ void hell_serial::on_pb_mode_switch_clicked()
     }
     //this->windowFlags() & (~Qt::WindowStaysOnTopHint)
 }
+
+void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
+{
+    if(checked) {
+        ui->pb_hex_send->setCheckable(true);
+        ui->pb_ascii_send->setCheckable(true);
+    } else {
+        ui->pb_hex_send->setCheckable(false);
+        ui->pb_ascii_send->setCheckable(false);
+    }
+}
+
