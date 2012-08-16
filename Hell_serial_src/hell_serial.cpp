@@ -574,7 +574,13 @@ int hell_serial::get_sampling_time(QString time_str)
 }
 void hell_serial::on_pb_hex_send_clicked(bool checked)
 {
-    //m_hex_send_autorepeat_timer
+    if(!m_serial_port.isOpen()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
+        if(ui->pb_hex_send->isCheckable()) {
+            ui->pb_hex_send->setChecked(false);
+        }
+        return;
+    }
 
     if(ui->pb_hex_send->isCheckable()) {
         if(checked){
@@ -646,6 +652,14 @@ void hell_serial::hex_send()
 
 void hell_serial::on_pb_ascii_send_clicked(bool checked)
 {
+    if(!m_serial_port.isOpen()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
+        if(ui->pb_ascii_send->isCheckable()) {
+            ui->pb_ascii_send->setChecked(false);
+        }
+        return;
+    }
+
     if(ui->pb_ascii_send->isCheckable()) {
         if(checked){
             if(m_hex_send_autorepeat_timer.isActive()) {
