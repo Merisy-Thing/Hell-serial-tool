@@ -42,6 +42,8 @@ private slots:
     void on_pb_hex_send_clicked(bool checked);
     void on_pb_ascii_send_clicked(bool checked);
 
+    void on_pb_home_page_clicked();
+
 private:
     Ui::hell_serial *ui;
 

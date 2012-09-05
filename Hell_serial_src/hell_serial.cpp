@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QRegExp>
 #include <QDate>
+#include <QDesktopServices>
+#include <QUrl>
 
 #define POLL_INTERVAL       200  /*Unit: ms*/
 #define TIME_OUT            10   /*Unit: ms*/
@@ -45,7 +47,7 @@ hell_serial::hell_serial(QWidget *parent) :
     connect(&m_ascii_send_autorepeat_timer, SIGNAL(timeout ()),
             this,       SLOT(ascii_send()));
 
-    this->setWindowTitle(QString("Hell Serial Tool - ") + __DATE__);
+    this->setWindowTitle(QString("Hell Serial Tool - ") + __DATE__ + "  (By: Hell Prototypes)");
 }
 
 hell_serial::~hell_serial()
@@ -726,3 +728,8 @@ void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
     }
 }
 
+
+void hell_serial::on_pb_home_page_clicked()
+{
+    QDesktopServices::openUrl(QUrl("http://code.google.com/p/hell-prototypes/", QUrl::TolerantMode));
+}

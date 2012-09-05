@@ -30,3 +30,6 @@ HEADERS  += hell_serial.h \
 FORMS    += hell_serial.ui
 
 RC_FILE = icon.rc
+
+RESOURCES += \
+    rc.qrc
