@@ -7,6 +7,7 @@
 #include <QDate>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QScrollBar>
 
 #define POLL_INTERVAL       200  /*Unit: ms*/
 #define TIME_OUT            10   /*Unit: ms*/
@@ -299,11 +300,13 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
     cursor = ui->pte_out_hex->textCursor();
     cursor.movePosition(QTextCursor::End);
     ui->pte_out_hex->setTextCursor(cursor);
+    ui->pte_out_hex->verticalScrollBar()->triggerAction(QAbstractSlider::SliderToMaximum);
 
     cursor = ui->pte_out_ascii->textCursor();
     ui->pte_out_ascii->setPlainText(receive_buffer_ascii);
     cursor.movePosition(QTextCursor::End);
     ui->pte_out_ascii->setTextCursor(cursor);
+    ui->pte_out_ascii->verticalScrollBar()->triggerAction(QAbstractSlider::SliderToMaximum);
 
     ui->lb_dbg->setText(QString("%1").arg(receive_buffer_ascii.size()));
 
