@@ -43,6 +43,10 @@ hell_serial::hell_serial(QWidget *parent) :
     connect(rec_thread, SIGNAL(dataReceived(const QByteArray &)),
             this,       SLOT(dataReceived(const QByteArray &)));
 
+    sed_thread = new send_thread(m_serial_port);
+    connect(sed_thread, SIGNAL(dataSended(int)),
+            this,       SLOT(dataSended(int)));
+
     connect(&m_hex_send_autorepeat_timer, SIGNAL(timeout ()),
             this,       SLOT(hex_send()));
     connect(&m_ascii_send_autorepeat_timer, SIGNAL(timeout ()),
@@ -252,7 +256,10 @@ void hell_serial::on_pb_port_ctrl_clicked()
         //poll_timer->start(POLL_INTERVAL);
     }
 }
-
+void hell_serial::dataSended(int count)
+{
+    //FIXME
+}
 void hell_serial::dataReceived(const QByteArray &dataReceived)
 {
     const char bin2hex[] = "0123456789ABCDEF";
@@ -335,10 +342,11 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
             } else {
                 c.push_back(key_code);
             }
-            //qDebug("%s",event->text().toAscii().data());
             break ;
         }
-        m_serial_port.write(c);
+        //qDebug("%s",c.data());
+        //m_serial_port.write(c);
+        sed_thread->send_data(c);
     }
 }
 
@@ -404,7 +412,8 @@ void hell_serial::on_pb_send_file_clicked()
     rec_thread->stopReceiving();
     rec_thread->wait();
 
-    m_serial_port.write(file_data);//Send data
+    //m_serial_port.write(file_data);//Send data
+    sed_thread->send_data(file_data);
 
     m_serial_port.flush();
     rec_thread->start();
@@ -648,7 +657,8 @@ void hell_serial::hex_send()
 
     if(m_serial_port.isOpen()) {
         add_custom_cmd_to_list(cmd_backup);
-        m_serial_port.write(raw_data);
+        //m_serial_port.write(raw_data);
+        sed_thread->send_data(raw_data);
     }
 
     //qDebug("cmd = %s", cmd.toAscii().data());
@@ -689,7 +699,8 @@ void hell_serial::ascii_send()
 
     if(m_serial_port.isOpen()) {
         add_custom_cmd_to_list(cmd);
-        m_serial_port.write(cmd.toAscii().data());
+        //m_serial_port.write(cmd.toAscii().data());
+        sed_thread->send_data(cmd.toAscii());
     }
 }
 

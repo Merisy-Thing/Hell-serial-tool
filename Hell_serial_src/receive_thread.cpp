@@ -31,10 +31,7 @@ void receive_thread::run()
         }
         numBytes = port.bytesAvailable();
         if (numBytes>0) {
-            mutexReceive.lock();
             data = port.read(numBytes);
-            mutexReceive.unlock();
-
             emit dataReceived(data);
         }
         usleep(10);

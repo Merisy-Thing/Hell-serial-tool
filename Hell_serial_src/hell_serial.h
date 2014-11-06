@@ -8,6 +8,7 @@
 
 #include "qextserialport.h"
 #include "receive_thread.h"
+#include "send_thread.h"
 
 namespace Ui {
     class hell_serial;
@@ -24,6 +25,7 @@ public:
 
 private slots:
     void dataReceived(const QByteArray &dataReceived);
+    void dataSended(int count);
     void hex_send();
     void ascii_send();
 
@@ -51,6 +53,7 @@ private:
 
     QextSerialPort  m_serial_port;
     receive_thread *rec_thread;
+    send_thread *sed_thread;
     QString receive_buffer_hex;
     QString receive_buffer_ascii;
     QByteArray receive_buffer_raw;

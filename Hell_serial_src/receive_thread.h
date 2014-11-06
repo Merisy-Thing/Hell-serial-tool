@@ -21,7 +21,6 @@ signals:
 
 private :
     QextSerialPort &port;
-    QMutex mutexReceive;
     bool stopped;
 
 };
