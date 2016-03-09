@@ -4,30 +4,18 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network widgets serialport
 
-TARGET = Hell_serial
+TARGET = Hell_Serial
 TEMPLATE = app
 
 INCLUDEPATH += qextserialport
 
 
 SOURCES += main.cpp\
-        hell_serial.cpp \
-    qextserialport/win_qextserialport.cpp \
-    qextserialport/qextserialport.cpp \
-    qextserialport/qextserialenumerator.cpp \
-    qextserialport/qextserialbase.cpp \
-    receive_thread.cpp \
-    send_thread.cpp
+        hell_serial.cpp
 
-HEADERS  += hell_serial.h \
-    qextserialport/win_qextserialport.h \
-    qextserialport/qextserialport.h \
-    qextserialport/qextserialenumerator.h \
-    qextserialport/qextserialbase.h \
-    receive_thread.h \
-    send_thread.h
+HEADERS  += hell_serial.h
 
 FORMS    += hell_serial.ui
 

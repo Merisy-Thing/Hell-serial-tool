@@ -5,10 +5,7 @@
 #include <QMap>
 #include <QTimer>
 #include <QSettings>
-
-#include "qextserialport.h"
-#include "receive_thread.h"
-#include "send_thread.h"
+#include <QtSerialPort/QtSerialPort>
 
 namespace Ui {
     class hell_serial;
@@ -24,8 +21,8 @@ public:
 
 
 private slots:
-    void dataReceived(const QByteArray &dataReceived);
-    void dataSended(int count);
+    void dataReceived(const QByteArray &data);
+    void readData();
     void hex_send();
     void ascii_send();
 
@@ -35,8 +32,6 @@ private slots:
     void on_pb_save_raw_data_clicked();
     void on_pb_send_file_clicked();
     void on_pb_record_raw_data_clicked();
-    void on_pte_out_hex_selectionChanged();
-    void on_pte_out_ascii_selectionChanged();
     void on_pb_about_clicked();
     void on_pb_always_visible_clicked();
     void on_pb_mode_switch_clicked();
@@ -51,15 +46,13 @@ private:
 
     void ui_init();
 
-    QextSerialPort  m_serial_port;
-    receive_thread *rec_thread;
-    send_thread *sed_thread;
+    QSerialPort *m_qserial_port;
+
     QString receive_buffer_hex;
     QString receive_buffer_ascii;
     QByteArray receive_buffer_raw;
     int line_feed;
     int buffer_len;
-    int select_changed;
 
     QTimer m_hex_send_autorepeat_timer;
     QTimer m_ascii_send_autorepeat_timer;

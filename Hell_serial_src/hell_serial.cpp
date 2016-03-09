@@ -9,13 +9,7 @@
 #include <QUrl>
 #include <QScrollBar>
 
-#define POLL_INTERVAL       200  /*Unit: ms*/
-#define TIME_OUT            10   /*Unit: ms*/
-#define MAX_FILE_SIZE       64*1024
-
-#define SELECT_FILTED               0
-#define SELECT_CHANGED_FROM_HEX     1
-#define SELECT_CHANGED_FROM_ASCII   2
+#define MAX_FILE_SIZE       512*1024
 
 #define MAX_CUSTOM_CMD_NUM          64
 #define CUSTOM_CMD_FILE_NAME        "custom_cmd_list.ini"
@@ -27,25 +21,17 @@ hell_serial::hell_serial(QWidget *parent) :
 
     ui_init();
 
-    m_serial_port.setDtr(false);
-    m_serial_port.setRts(false);
+    m_qserial_port = new QSerialPort(this);
 
     line_feed = 0;
-    select_changed = SELECT_FILTED;
 
     is_ascii_mode = false;
     ui->pte_out_ascii_mode->setVisible(false);
     this->setMaximumWidth(600);
-    this->setWindowFlags(Qt::WindowMinimizeButtonHint);
+    this->setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
     this->show();
 
-    rec_thread = new receive_thread(m_serial_port);
-    connect(rec_thread, SIGNAL(dataReceived(const QByteArray &)),
-            this,       SLOT(dataReceived(const QByteArray &)));
-
-    sed_thread = new send_thread(m_serial_port);
-    connect(sed_thread, SIGNAL(dataSended(int)),
-            this,       SLOT(dataSended(int)));
+    connect(m_qserial_port, SIGNAL(readyRead()), this, SLOT(readData()));
 
     connect(&m_hex_send_autorepeat_timer, SIGNAL(timeout ()),
             this,       SLOT(hex_send()));
@@ -57,16 +43,12 @@ hell_serial::hell_serial(QWidget *parent) :
 
 hell_serial::~hell_serial()
 {
-    if(rec_thread->isRunning()) {
-        rec_thread->stopReceiving();
-        rec_thread->wait();
-    }
-    if(m_serial_port.isOpen()) {
-        m_serial_port.close();
-    }
-
     if(record_file.isOpen()) {
        record_file.close();
+    }
+
+    if(m_qserial_port->isOpen()) {
+        m_qserial_port->close();
     }
 
     if(m_setting_file != NULL) {
@@ -94,7 +76,6 @@ void hell_serial::ui_init()
 {
     QString string;
     QStringList string_list;
-    int index;
 
     //Port name list
     string = "COM%1";
@@ -105,19 +86,13 @@ void hell_serial::ui_init()
     ui->cb_port_name->setCurrentIndex(0);
 
     //Baud Rate Type
-    string_list <<  "50"     <<  "75"    <<  "110"   <<  "134"   <<  "150"
-                <<  "200"    <<  "300"   <<  "600"   <<  "1200"  <<  "1800"
-                <<  "2400"   <<  "4800"  <<  "9600"  <<  "14400" <<  "19200"
+    string_list <<  "2400"   <<  "4800"  <<  "9600"  <<  "14400" <<  "19200"
                 <<  "38400"  <<  "56000" <<  "57600" <<  "76800" <<  "115200"
                 <<  "128000" <<  "256000";
-    index = BAUD50;
-    for(int i=0; i<string_list.size(); i++) {
-        ui->cb_baudrate->insertItem(i, string_list.at(i));
-        m_baudrate_map[string_list.at(i)] = index;
-        index++;
-    }
-    ui->cb_baudrate->setMaxVisibleItems(15);
-    ui->cb_baudrate->setCurrentIndex(19);
+    ui->cb_baudrate->insertItems(0, string_list);
+
+    ui->cb_baudrate->setMaxVisibleItems(12);
+    ui->cb_baudrate->setCurrentIndex(9);
 
     //Data bits
     string = "%1";
@@ -129,12 +104,15 @@ void hell_serial::ui_init()
 
     //Parity Type
     string_list.clear();
-    string_list << tr("NONE") << tr("ODD") << tr("EVEN") << tr("MARK") << tr("SPACE");
-    index = PAR_NONE;
+    string_list << tr("NONE") << tr("EVEN") << tr("ODD") << tr("SPACE") << tr("MARK");
+    int parity_list[] = {QSerialPort::NoParity,
+                         QSerialPort::EvenParity,
+                         QSerialPort::OddParity,
+                         QSerialPort::SpaceParity,
+                         QSerialPort::MarkParity };
     for(int i=0; i<string_list.size(); i++) {
         ui->cb_parity->insertItem(i, string_list.at(i));
-        m_parity_map[string_list.at(i)] = index;
-        index++;
+        m_parity_map[string_list.at(i)] = parity_list[i];
     }
     ui->cb_parity->setMaxVisibleItems(5);
     ui->cb_parity->setCurrentIndex(0);
@@ -142,12 +120,14 @@ void hell_serial::ui_init()
     //Stop bits
     string_list.clear();
     string_list << tr("1") << tr("1.5") << tr("2");
-    index = STOP_1;
+    int stopBits_list[] = {QSerialPort::OneStop,
+                           QSerialPort::OneAndHalfStop,
+                           QSerialPort::TwoStop};
     for(int i=0; i<string_list.size(); i++) {
         ui->cb_stop_bits->insertItem(i, string_list.at(i));
-        m_stop_bits_map[string_list.at(i)] = index;
-        index++;
+        m_stop_bits_map[string_list.at(i)] = stopBits_list[i];
     }
+
     ui->cb_stop_bits->setMaxVisibleItems(3);
     ui->cb_stop_bits->setCurrentIndex(0);
 
@@ -202,22 +182,17 @@ void hell_serial::ui_init()
 void hell_serial::on_pb_about_clicked()
 {
     QMessageBox::about(this, tr("About "),
-                       tr("A Simple Serial Tool (Qt 4.7.3)"
+                       tr("A Simple Serial Tool"
                           "\r\nCreat by: pajoke"
                           "\r\nE_Mail: pajoke@163.com"
-                          "\r\n======================"
-                          "\r\nCode base on \"QExtSerialPort\" Class"
                           ));
 }
 
 void hell_serial::on_pb_port_ctrl_clicked()
 {
-    if(m_serial_port.isOpen()) {
+    if(m_qserial_port->isOpen()) {
         //close
-        rec_thread->stopReceiving();
-        rec_thread->wait();
-
-        m_serial_port.close();
+        m_qserial_port->close();
         ui->pb_port_ctrl->setText(tr("Open"));
 
         if(record_file.isOpen()) {
@@ -233,17 +208,15 @@ void hell_serial::on_pb_port_ctrl_clicked()
         ui->gb_port_setting->setEnabled(true);
     } else {
         //open
-        m_serial_port.setPortName(ui->cb_port_name->currentText());
-        if(m_serial_port.open(QIODevice::ReadWrite)) {
-            m_serial_port.setBaudRate((BaudRateType)m_baudrate_map[ui->cb_baudrate->currentText()]);
-            m_serial_port.setDataBits((DataBitsType)ui->cb_data_bits->currentIndex());
-            m_serial_port.setParity((ParityType)m_parity_map[ui->cb_parity->currentText()]);
-            m_serial_port.setStopBits((StopBitsType)m_stop_bits_map[ui->cb_stop_bits->currentText()]);
-            m_serial_port.setFlowControl(FLOW_OFF);
-            m_serial_port.setTimeout(TIME_OUT);
+        m_qserial_port->setPortName(ui->cb_port_name->currentText());
+        if(m_qserial_port->open(QIODevice::ReadWrite)) {
+            m_qserial_port->setBaudRate(ui->cb_baudrate->currentText().toInt());
+            m_qserial_port->setDataBits((QSerialPort::DataBits)ui->cb_data_bits->currentText().toInt());
+            m_qserial_port->setParity((QSerialPort::Parity)m_parity_map[ui->cb_parity->currentText()]);
+            m_qserial_port->setStopBits((QSerialPort::StopBits)m_stop_bits_map[ui->cb_stop_bits->currentText()]);
+            m_qserial_port->setFlowControl(QSerialPort::NoFlowControl);
 
-            m_serial_port.flush();
-            rec_thread->start();
+            m_qserial_port->flush();
 
             ui->pb_port_ctrl->setText(tr("Close"));
             ui->pb_save_raw_data->setEnabled(false);
@@ -251,16 +224,18 @@ void hell_serial::on_pb_port_ctrl_clicked()
             ui->pb_record_raw_data->setEnabled(true);
             ui->gb_port_setting->setEnabled(false);
         } else {
-            qDebug("open fail");
+            //qDebug("open fail");
         }
-        //poll_timer->start(POLL_INTERVAL);
     }
 }
-void hell_serial::dataSended(int count)
+
+void hell_serial::readData()
 {
-    //FIXME
+    QByteArray data = m_qserial_port->readAll();
+    dataReceived(data);
 }
-void hell_serial::dataReceived(const QByteArray &dataReceived)
+
+void hell_serial::dataReceived(const QByteArray &data)
 {
     const char bin2hex[] = "0123456789ABCDEF";
     uchar ch;
@@ -270,10 +245,10 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
     cursor = ui->pte_out_ascii_mode->textCursor();
     cursor.movePosition(QTextCursor::End);
     ui->pte_out_ascii_mode->setTextCursor(cursor);
-    ui->pte_out_ascii_mode->insertPlainText(QString(dataReceived));
+    ui->pte_out_ascii_mode->insertPlainText(QString(data));
 
-    for(int i=0; i<dataReceived.size(); i++) {
-        ch = dataReceived[i];
+    for(int i=0; i<data.size(); i++) {
+        ch = data[i];
 
         if(ch >= ' ' && ch <= '~') {
             receive_buffer_ascii += ch;
@@ -289,13 +264,13 @@ void hell_serial::dataReceived(const QByteArray &dataReceived)
         }
     }
 
-    receive_buffer_raw += dataReceived;
+    receive_buffer_raw += data;
     if(receive_buffer_raw.size() > buffer_len) {
         receive_buffer_raw.remove(0, receive_buffer_raw.size()%buffer_len);
     }
 
     if(record_file.isOpen()) {
-        record_file.write(dataReceived);
+        record_file.write(data);
     }
 
     if(receive_buffer_ascii.size()> buffer_len) {
@@ -323,15 +298,15 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
 {
     QByteArray c;
 
-    if(m_serial_port.isOpen()) {
+    if(m_qserial_port->isOpen()) {
         switch (event->key()) {
         case Qt::Key_Space:
-            qDebug("Key_Space");
+            //qDebug("Key_Space");
             c.push_back(' ');
             break;
             break;
         default :
-            QByteArray key_code = event->text().toAscii();
+            QByteArray key_code = event->text().toLatin1();
             if(key_code.at(0) == '\r') {
                 if(ui->cbx_line_feed_mode->isChecked()) {
                     c.push_back('\r');
@@ -345,8 +320,7 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
             break ;
         }
         //qDebug("%s",c.data());
-        //m_serial_port.write(c);
-        sed_thread->send_data(c);
+        m_qserial_port->write(c);
     }
 }
 
@@ -409,14 +383,9 @@ void hell_serial::on_pb_send_file_clicked()
     file.close();
 
     ui->pb_port_ctrl->setEnabled(false);
-    rec_thread->stopReceiving();
-    rec_thread->wait();
 
-    //m_serial_port.write(file_data);//Send data
-    sed_thread->send_data(file_data);
+    m_qserial_port->write(file_data);
 
-    m_serial_port.flush();
-    rec_thread->start();
     ui->pb_port_ctrl->setEnabled(true);
 }
 
@@ -441,84 +410,6 @@ void hell_serial::on_pb_record_raw_data_clicked()
     }
 }
 
-void hell_serial::on_pte_out_hex_selectionChanged()
-{
-    if(select_changed == SELECT_CHANGED_FROM_ASCII || select_changed == SELECT_CHANGED_FROM_HEX) {
-        select_changed = SELECT_FILTED;
-        return;
-    } else {
-        select_changed = SELECT_CHANGED_FROM_HEX;
-    }
-
-    QTextCursor cursor_hex = ui->pte_out_hex->textCursor();
-    QTextCursor cursor_ascii = ui->pte_out_ascii->textCursor();
-
-    int hex_start, ascii_start, end, hex_len, ascii_len, section, start_section;
-
-    hex_start = cursor_hex.selectionStart();
-    end   = cursor_hex.selectionEnd();
-    hex_len = end - hex_start + 2;
-    start_section = hex_start/49;
-    section  = hex_len/49;
-
-    ascii_start = (hex_start - start_section)/3 + start_section;
-    ascii_len = (hex_len - section)/3 + section;
-
-    if(ascii_len == 0) {
-        ascii_len = 1;
-    }
-
-    //qDebug("start = %d, end = %d", hex_start, end);
-
-    cursor_ascii.setPosition(ascii_start);
-    cursor_ascii.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ascii_len);
-    ui->pte_out_ascii->setTextCursor(cursor_ascii);
-
-    if(hex_len == 2) {
-        hex_start = hex_start - (hex_start - start_section)%3;
-        cursor_hex.setPosition(hex_start);
-        cursor_hex.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 2);
-        ui->pte_out_hex->setTextCursor(cursor_hex);
-        select_changed = SELECT_CHANGED_FROM_HEX;
-    }
-
-}
-
-void hell_serial::on_pte_out_ascii_selectionChanged()
-{
-    if(select_changed == SELECT_CHANGED_FROM_ASCII || select_changed == SELECT_CHANGED_FROM_HEX) {
-        select_changed = SELECT_FILTED;
-        return;
-    } else {
-        select_changed = SELECT_CHANGED_FROM_ASCII;
-    }
-    QTextCursor cursor_hex = ui->pte_out_hex->textCursor();
-    QTextCursor cursor_ascii = ui->pte_out_ascii->textCursor();
-
-    int hex_start, ascii_start, end, hex_len, ascii_len, section, start_section;
-
-    ascii_start = cursor_ascii.selectionStart();
-    end = cursor_ascii.selectionEnd();
-    ascii_len = end - ascii_start;
-    start_section = ascii_start/17;
-    section = ascii_len/17;
-
-    hex_start = (ascii_start - start_section)*3 + start_section;
-    hex_len = (ascii_len - section)*3 + section;
-
-    //qDebug("start = %d, end = %d", ascii_start, end);
-
-    cursor_hex.setPosition(hex_start);
-    cursor_hex.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, hex_len);
-    ui->pte_out_hex->setTextCursor(cursor_hex);
-
-    if(ascii_len == 0) {
-        cursor_ascii.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
-        ui->pte_out_ascii->setTextCursor(cursor_ascii);
-        select_changed = SELECT_CHANGED_FROM_ASCII;
-    }
-}
-
 void hell_serial::on_pb_always_visible_clicked()
 {
     if(this->windowFlags() & Qt::WindowStaysOnTopHint) {
@@ -540,15 +431,13 @@ void hell_serial::add_custom_cmd_to_list(QString cmd)
         m_custom_cmd_string_list.push_back(cmd);
         ui->cb_custom_cmd_list->insertItem(0, cmd);
     } else {
-
-
         int index = ui->cb_custom_cmd_list->findText(cmd);
         if(index >=0 ) {
             ui->cb_custom_cmd_list->removeItem(index);
             ui->cb_custom_cmd_list->insertItem(0,cmd);
             ui->cb_custom_cmd_list->setCurrentIndex(0);
         } else {
-            qDebug("can't found text = %s", cmd.toAscii().data());
+            qDebug("can't found text = %s", cmd.toLatin1().data());
         }
     }
 }
@@ -588,7 +477,7 @@ int hell_serial::get_sampling_time(QString time_str)
 }
 void hell_serial::on_pb_hex_send_clicked(bool checked)
 {
-    if(!m_serial_port.isOpen()) {
+    if(!m_qserial_port->isOpen()) {
         QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
         if(ui->pb_hex_send->isCheckable()) {
             ui->pb_hex_send->setChecked(false);
@@ -655,10 +544,9 @@ void hell_serial::hex_send()
         }
     }
 
-    if(m_serial_port.isOpen()) {
+    if(m_qserial_port->isOpen()) {
         add_custom_cmd_to_list(cmd_backup);
-        //m_serial_port.write(raw_data);
-        sed_thread->send_data(raw_data);
+        m_qserial_port->write(raw_data);
     }
 
     //qDebug("cmd = %s", cmd.toAscii().data());
@@ -667,7 +555,7 @@ void hell_serial::hex_send()
 
 void hell_serial::on_pb_ascii_send_clicked(bool checked)
 {
-    if(!m_serial_port.isOpen()) {
+    if(!m_qserial_port->isOpen()) {
         QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
         if(ui->pb_ascii_send->isCheckable()) {
             ui->pb_ascii_send->setChecked(false);
@@ -697,10 +585,9 @@ void hell_serial::ascii_send()
         return;
     }
 
-    if(m_serial_port.isOpen()) {
+    if(m_qserial_port->isOpen()) {
         add_custom_cmd_to_list(cmd);
-        //m_serial_port.write(cmd.toAscii().data());
-        sed_thread->send_data(cmd.toAscii());
+        m_qserial_port->write(cmd.toLatin1());
     }
 }
 
@@ -715,7 +602,7 @@ void hell_serial::on_pb_mode_switch_clicked()
         ui->pte_out_ascii_mode->setVisible(false);
 
         this->setMaximumWidth(600);
-        this->setWindowFlags(this->windowFlags() & (~Qt::WindowMaximizeButtonHint));
+        this->setWindowFlags(windowFlags() & (~Qt::WindowMaximizeButtonHint));
         this->show();
     } else {
         is_ascii_mode = true;
@@ -728,7 +615,6 @@ void hell_serial::on_pb_mode_switch_clicked()
         this->setWindowFlags(this->windowFlags() | Qt::WindowMaximizeButtonHint);
         this->show();
     }
-    //this->windowFlags() & (~Qt::WindowStaysOnTopHint)
 }
 
 void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
@@ -745,5 +631,5 @@ void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
 
 void hell_serial::on_pb_home_page_clicked()
 {
-    QDesktopServices::openUrl(QUrl("http://code.google.com/p/hell-prototypes/", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("http://www.hellprototypes.com/", QUrl::TolerantMode));
 }
