@@ -7,6 +7,8 @@
 #include <QSettings>
 #include <QtSerialPort/QtSerialPort>
 
+#include "qhexedit2/qhexedit.h"
+
 namespace Ui {
     class hell_serial;
 }
@@ -21,8 +23,7 @@ public:
 
 
 private slots:
-    void dataReceived(const QByteArray &data);
-    void readData();
+    void readSerialData();
     void hex_send();
     void ascii_send();
 
@@ -45,13 +46,12 @@ private:
     Ui::hell_serial *ui;
 
     void ui_init();
+    void hex_edit_init();
 
     QSerialPort *m_qserial_port;
 
-    QString receive_buffer_hex;
-    QString receive_buffer_ascii;
-    QByteArray receive_buffer_raw;
-    int line_feed;
+    QHexEdit *m_hex_edit;
+
     int buffer_len;
 
     QTimer m_hex_send_autorepeat_timer;
@@ -71,7 +71,7 @@ private:
 
     void add_custom_cmd_to_list(QString cmd);
     int  get_sampling_time(QString time_str);
-
+    void stop_autorepeat();
 protected:
     void keyPressEvent ( QKeyEvent * event );
 };
