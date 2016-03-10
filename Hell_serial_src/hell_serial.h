@@ -5,9 +5,10 @@
 #include <QMap>
 #include <QTimer>
 #include <QSettings>
+#include <QList>
 #include <QtSerialPort/QtSerialPort>
-
 #include "qhexedit2/qhexedit.h"
+#include "custom_cmd_item.h"
 
 namespace Ui {
     class hell_serial;
@@ -24,8 +25,13 @@ public:
 
 private slots:
     void readSerialData();
-    void hex_send();
-    void ascii_send();
+    void hex_send(const QString &_cmd);
+    void ascii_send(const QString &_cmd);
+    void cmdToolBoxTopLevelChanged(bool top);
+    void cmdToolBox_send_custom_cmd(bool is_hex_send, QString cmd);
+    void cmdToolBox_remove_custom_cmd(int id);
+    void autorepeat_hex_send();
+    void autorepeat_ascii_send();
 
     void on_pb_port_ctrl_clicked();
     void on_pb_clear_clicked();
@@ -39,8 +45,8 @@ private slots:
     void on_chb_AutoRepeat_clicked(bool checked);
     void on_pb_hex_send_clicked(bool checked);
     void on_pb_ascii_send_clicked(bool checked);
-
     void on_pb_home_page_clicked();
+    void on_pb_make_cmd_list_clicked();
 
 private:
     Ui::hell_serial *ui;
@@ -69,9 +75,14 @@ private:
 
     bool is_ascii_mode;
 
+    QList<custom_cmd_item *> m_custom_cmd_item_list;
+
     void add_custom_cmd_to_list(QString cmd);
     int  get_sampling_time(QString time_str);
     void stop_autorepeat();
+    void new_custom_cmd_item(int id, const QString &command);
+    void resize_custom_cmd_tools_box();
+
 protected:
     void keyPressEvent ( QKeyEvent * event );
 };

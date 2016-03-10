@@ -68,6 +68,32 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QDockWidget" name="dw_cmd_tools">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="floating">
+        <bool>false</bool>
+       </property>
+       <property name="features">
+        <set>QDockWidget::AllDockWidgetFeatures</set>
+       </property>
+       <property name="allowedAreas">
+        <set>Qt::NoDockWidgetArea</set>
+       </property>
+       <widget class="QWidget" name="dockWidgetContents">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QVBoxLayout" name="vl_cmd_tools_list"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="2" column="0">
@@ -352,6 +378,16 @@ S:second</string>
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="cbx_line_feed_mode">
+       <property name="text">
+        <string>\r\n</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pb_always_visible">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
@@ -400,6 +436,25 @@ S:second</string>
    </item>
    <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="pb_make_cmd_list">
+       <property name="maximumSize">
+        <size>
+         <width>20</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="text">
+        <string>★</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QComboBox" name="cb_custom_cmd_list">
        <property name="sizePolicy">
@@ -451,16 +506,6 @@ S:second</string>
        </property>
        <property name="text">
         <string>Ascii Send</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="cbx_line_feed_mode">
-       <property name="text">
-        <string>\r\n</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
        </property>
       </widget>
      </item>

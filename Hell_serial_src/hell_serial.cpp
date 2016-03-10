@@ -33,11 +33,12 @@ hell_serial::hell_serial(QWidget *parent) :
     connect(m_qserial_port, SIGNAL(readyRead()), this, SLOT(readSerialData()));
 
     connect(&m_hex_send_autorepeat_timer, SIGNAL(timeout ()),
-            this,       SLOT(hex_send()));
+            this,       SLOT(autorepeat_hex_send()));
     connect(&m_ascii_send_autorepeat_timer, SIGNAL(timeout ()),
-            this,       SLOT(ascii_send()));
+            this,       SLOT(autorepeat_ascii_send()));
 
     this->setWindowTitle(QString("Hell Serial Tool - ") + __DATE__ + "  (By: Hell Prototypes)");
+    ui->pb_about->setVisible(false);
 }
 
 hell_serial::~hell_serial()
@@ -65,6 +66,16 @@ hell_serial::~hell_serial()
             m_setting_file->setValue("Cmd_"+QString::number(index++), cmd);
         }
         m_setting_file->endGroup();
+
+        if(m_custom_cmd_item_list.size() > 0) {
+            m_setting_file->beginGroup("Box_List");
+            QStringList list;
+            for(int i=0; i<m_custom_cmd_item_list.size(); i++) {
+                list.push_back(m_custom_cmd_item_list.at(i)->get_cmd_text());
+            }
+            m_setting_file->setValue("List", list);
+            m_setting_file->endGroup();
+        }
         m_setting_file->sync();
     }
 
@@ -144,6 +155,13 @@ void hell_serial::ui_init()
     ui->pb_send_file->setEnabled(false);
     ui->pb_record_raw_data->setEnabled(false);
 
+    ui->dw_cmd_tools->setVisible(false);
+    ui->dw_cmd_tools->setFloating(true);
+    ui->dw_cmd_tools->layout()->setSpacing(0);
+    ui->dw_cmd_tools->layout()->setMargin(0);
+
+    connect(ui->dw_cmd_tools, SIGNAL(topLevelChanged(bool)), this, SLOT(cmdToolBoxTopLevelChanged(bool)));
+
     QFile setting_file(CUSTOM_CMD_FILE_NAME);
     if(setting_file.exists()) {
         m_setting_file = new QSettings(CUSTOM_CMD_FILE_NAME, QSettings::IniFormat);
@@ -157,6 +175,15 @@ void hell_serial::ui_init()
             m_custom_cmd_string_list.push_back(cmd);
         }
         m_setting_file->endGroup();
+
+        m_setting_file->beginGroup("Box_List");
+        QStringList list = m_setting_file->value("List").toStringList();
+        for(int i=0; i<list.size(); i++) {
+            new_custom_cmd_item(i, list.at(i));
+        }
+        m_setting_file->setValue("List", list);
+        m_setting_file->endGroup();
+
     } else {
         if(setting_file.open(QIODevice::WriteOnly)) {
             setting_file.close();
@@ -171,18 +198,18 @@ void hell_serial::ui_init()
     }
 
     ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
+
 }
 
 void hell_serial::hex_edit_init()
 {
     m_hex_edit = new QHexEdit;
     m_hex_edit->setFocusPolicy(Qt::NoFocus);
-    ui->horizontalLayout->addWidget(m_hex_edit);
+    ui->horizontalLayout->insertWidget(0, m_hex_edit);
 
     m_hex_edit->setReadOnly(true);
     m_hex_edit->setAddressArea(false);
 }
-
 
 
 void hell_serial::on_pb_about_clicked()
@@ -486,12 +513,12 @@ void hell_serial::on_pb_hex_send_clicked(bool checked)
             m_hex_send_autorepeat_timer.stop();
         }
     } else {
-        hex_send();
+        hex_send(ui->cb_custom_cmd_list->currentText());
     }
 }
-void hell_serial::hex_send()
+void hell_serial::hex_send(const QString &_cmd)
 {
-    QString cmd = ui->cb_custom_cmd_list->currentText();
+    QString cmd = _cmd;
     if(cmd.isEmpty()) {
         return;
     }
@@ -564,12 +591,12 @@ void hell_serial::on_pb_ascii_send_clicked(bool checked)
             m_ascii_send_autorepeat_timer.stop();
         }
     } else {
-        ascii_send();
+        ascii_send(ui->cb_custom_cmd_list->currentText());
     }
 }
-void hell_serial::ascii_send()
+void hell_serial::ascii_send(const QString &_cmd)
 {
-    QString cmd = ui->cb_custom_cmd_list->currentText();
+    QString cmd = _cmd;
     if(cmd.isEmpty()) {
         return;
     }
@@ -620,4 +647,82 @@ void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
 void hell_serial::on_pb_home_page_clicked()
 {
     QDesktopServices::openUrl(QUrl("http://www.hellprototypes.com/", QUrl::TolerantMode));
+}
+
+void hell_serial::new_custom_cmd_item(int id, const QString &command)
+{
+    custom_cmd_item *cmd_item;
+
+    cmd_item = new custom_cmd_item(id);
+    cmd_item->set_cmd_text(command);
+    m_custom_cmd_item_list.push_back(cmd_item);
+    ui->vl_cmd_tools_list->addWidget(cmd_item);
+    connect(cmd_item, SIGNAL(send_custom_cmd(bool, QString)), this, SLOT(cmdToolBox_send_custom_cmd(bool, QString)));
+    connect(cmd_item, SIGNAL(remove_custom_cmd(int)), this, SLOT(cmdToolBox_remove_custom_cmd(int)));
+
+    resize_custom_cmd_tools_box();
+}
+
+void hell_serial::on_pb_make_cmd_list_clicked()
+{
+    if(!ui->dw_cmd_tools->isVisible()) {
+        if(m_custom_cmd_item_list.isEmpty()) {
+            new_custom_cmd_item(0, ui->cb_custom_cmd_list->currentText());
+        }
+        ui->dw_cmd_tools->setVisible(true);
+        QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
+
+        ui->dw_cmd_tools->move( pos.x() + ui->cb_custom_cmd_list->width(),
+                                pos.y()+ m_hex_edit->y());
+
+    } else {
+        new_custom_cmd_item(m_custom_cmd_item_list.size(), ui->cb_custom_cmd_list->currentText());
+    }
+}
+
+void hell_serial::cmdToolBox_send_custom_cmd(bool is_hex_send, QString cmd)
+{
+    if(is_hex_send) {
+        hex_send(cmd);
+    } else {
+        ascii_send(cmd);
+    }
+}
+
+void hell_serial::autorepeat_hex_send()
+{
+    hex_send(ui->cb_custom_cmd_list->currentText());
+}
+void hell_serial::autorepeat_ascii_send()
+{
+    ascii_send(ui->cb_custom_cmd_list->currentText());
+}
+
+void hell_serial::cmdToolBox_remove_custom_cmd(int id)
+{
+    if(id < m_custom_cmd_item_list.size()) {
+        custom_cmd_item *cmd_item = m_custom_cmd_item_list.at(id);
+        delete cmd_item;
+        m_custom_cmd_item_list.removeAt(id);
+
+        for(int i=0; i<m_custom_cmd_item_list.size(); i++) {
+            m_custom_cmd_item_list.at(i)->set_cmd_id(i);
+        }
+        resize_custom_cmd_tools_box();
+    }
+}
+
+void hell_serial::resize_custom_cmd_tools_box()
+{
+    QRect rect = ui->dw_cmd_tools->geometry();
+    rect.setHeight(m_custom_cmd_item_list.size()*26+24);
+    ui->dw_cmd_tools->setGeometry(rect);
+}
+
+void hell_serial::cmdToolBoxTopLevelChanged(bool top)
+{
+    if(!top) {
+        ui->dw_cmd_tools->setFloating(true);
+        resize_custom_cmd_tools_box();
+    }
 }
