@@ -12,7 +12,7 @@
 #define MAX_FILE_SIZE       512*1024
 
 #define MAX_CUSTOM_CMD_NUM          64
-#define CUSTOM_CMD_FILE_NAME        "custom_cmd_list.ini"
+#define CUSTOM_CMD_FILE_NAME        "Hell_Serial.ini"
 
 hell_serial::hell_serial(QWidget *parent) :
     QDialog(parent), ui(new Ui::hell_serial)
@@ -69,11 +69,18 @@ hell_serial::~hell_serial()
 
         if(m_custom_cmd_item_list.size() > 0) {
             m_setting_file->beginGroup("Box_List");
-            QStringList list;
+            QString cmd;
+            int index = 0;
             for(int i=0; i<m_custom_cmd_item_list.size(); i++) {
-                list.push_back(m_custom_cmd_item_list.at(i)->get_cmd_text());
+                if(index >= MAX_CUSTOM_CMD_NUM) {
+                    break;
+                }
+                cmd = m_custom_cmd_item_list.at(i)->get_cmd_text();
+                if(cmd.isEmpty()) {
+                    continue;
+                }
+                m_setting_file->setValue("Box_"+QString::number(index++), cmd);
             }
-            m_setting_file->setValue("List", list);
             m_setting_file->endGroup();
         }
         m_setting_file->sync();
@@ -177,11 +184,13 @@ void hell_serial::ui_init()
         m_setting_file->endGroup();
 
         m_setting_file->beginGroup("Box_List");
-        QStringList list = m_setting_file->value("List").toStringList();
-        for(int i=0; i<list.size(); i++) {
-            new_custom_cmd_item(i, list.at(i));
+        for(int i=0; i<MAX_CUSTOM_CMD_NUM; i++) {
+            cmd = m_setting_file->value("Box_"+QString::number(i)).toString();
+            if(cmd.isEmpty()) {
+                break;
+            }
+            new_custom_cmd_item(i, cmd);
         }
-        m_setting_file->setValue("List", list);
         m_setting_file->endGroup();
 
     } else {
