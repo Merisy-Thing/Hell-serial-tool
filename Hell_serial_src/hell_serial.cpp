@@ -158,7 +158,6 @@ void hell_serial::ui_init()
     buffer_len = 1024;
     ui->pte_out_ascii_mode->setMaximumBlockCount(buffer_len);
 
-    ui->pb_save_raw_data->setEnabled(false);
     ui->pb_send_file->setEnabled(false);
     ui->pb_record_raw_data->setEnabled(false);
 
@@ -253,9 +252,6 @@ void hell_serial::on_pb_port_ctrl_clicked()
            record_file.close();
         }
 
-        if(m_hex_edit->dataSize() > 0) {
-            ui->pb_save_raw_data->setEnabled(true);
-        }
         ui->pb_send_file->setEnabled(false);
         ui->pb_record_raw_data->setText(tr("Record"));
         ui->pb_record_raw_data->setEnabled(false);
@@ -273,7 +269,6 @@ void hell_serial::on_pb_port_ctrl_clicked()
             m_qserial_port->flush();
 
             ui->pb_port_ctrl->setText(tr("Close"));
-            ui->pb_save_raw_data->setEnabled(false);
             ui->pb_send_file->setEnabled(true);
             ui->pb_record_raw_data->setEnabled(true);
             ui->gb_port_setting->setEnabled(false);
@@ -346,8 +341,6 @@ void hell_serial::on_pb_clear_clicked()
 {
     m_hex_edit->remove(0, m_hex_edit->dataSize());
 
-    ui->pb_save_raw_data->setEnabled(false);
-
     ui->pte_out_ascii_mode->clear();
     ui->lb_dbg->setText("0");
 }
@@ -375,7 +368,7 @@ void hell_serial::on_pb_save_raw_data_clicked()
     }
 
     QString output_file = QFileDialog::getSaveFileName(this, tr("save file"),
-                                               "R:\\", tr("All (*.*)"));
+                                               "R:\\log.txt", tr("All (*.*)"));
     if(output_file.isEmpty() == true) {
         return;
     }
@@ -525,11 +518,11 @@ void hell_serial::on_pb_hex_send_clicked(bool checked)
         hex_send(ui->cb_custom_cmd_list->currentText());
     }
 }
-void hell_serial::hex_send(const QString &_cmd)
+bool hell_serial::hex_send(const QString &_cmd)
 {
     QString cmd = _cmd;
     if(cmd.isEmpty()) {
-        return;
+        return false;
     }
     QString cmd_backup = cmd;
 
@@ -540,24 +533,24 @@ void hell_serial::hex_send(const QString &_cmd)
         cmd = cmd.left(cmd.indexOf("//"));
     }
     if(cmd.isEmpty()) {
-        return;
+        return false;
     }
 
     //remove space char
     cmd.remove(QChar(' '), Qt::CaseSensitive);
     if(cmd.isEmpty()) {
-        return;
+        return false;
     }
 
     //odd number
     if(cmd.size() & 1) {
         QMessageBox::warning(this, tr("Error"), tr("Invalid data length, [Odd] length!"), QMessageBox::Yes );
-        return;
+        return false;
     }
 
     if(cmd.contains(QRegExp("[^0-9,A-F,a-f]"))) {
         QMessageBox::warning(this, tr("Error"), tr("Invalid data format, 0-9,A-F,a-f chars need!"), QMessageBox::Yes );
-        return;
+        return false;
     }
 
     QByteArray raw_data;
@@ -572,9 +565,11 @@ void hell_serial::hex_send(const QString &_cmd)
     if(m_qserial_port->isOpen()) {
         add_custom_cmd_to_list(cmd_backup);
         m_qserial_port->write(raw_data);
+        return true;
     }
 
     //qDebug("cmd = %s", cmd.toAscii().data());
+    return false;
 }
 
 
@@ -646,6 +641,7 @@ void hell_serial::on_chb_AutoRepeat_clicked(bool checked)
         ui->pb_hex_send->setCheckable(true);
         ui->pb_ascii_send->setCheckable(true);
     } else {
+        ui->pb_hex_send->setChecked(false);
         ui->pb_hex_send->setCheckable(false);
         ui->pb_ascii_send->setCheckable(false);
         stop_autorepeat();
@@ -700,7 +696,10 @@ void hell_serial::cmdToolBox_send_custom_cmd(bool is_hex_send, QString cmd)
 
 void hell_serial::autorepeat_hex_send()
 {
-    hex_send(ui->cb_custom_cmd_list->currentText());
+    if(!hex_send(ui->cb_custom_cmd_list->currentText())) {
+        m_hex_send_autorepeat_timer.stop();
+        ui->pb_hex_send->setChecked(false);
+    }
 }
 void hell_serial::autorepeat_ascii_send()
 {
@@ -734,4 +733,9 @@ void hell_serial::cmdToolBoxTopLevelChanged(bool top)
         ui->dw_cmd_tools->setFloating(true);
         resize_custom_cmd_tools_box();
     }
+}
+
+void hell_serial::on_cb_autorepeat_interval_currentIndexChanged(const QString &arg1)
+{
+    m_hex_send_autorepeat_timer.setInterval(get_sampling_time(arg1));
 }

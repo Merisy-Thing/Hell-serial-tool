@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QMap>
 #include <QTimer>
+#include <QMenu>
 #include <QSettings>
 #include <QList>
 #include <QtSerialPort/QtSerialPort>
@@ -25,7 +26,7 @@ public:
 
 private slots:
     void readSerialData();
-    void hex_send(const QString &_cmd);
+    bool hex_send(const QString &_cmd);
     void ascii_send(const QString &_cmd);
     void cmdToolBoxTopLevelChanged(bool top);
     void cmdToolBox_send_custom_cmd(bool is_hex_send, QString cmd);
@@ -47,6 +48,8 @@ private slots:
     void on_pb_ascii_send_clicked(bool checked);
     void on_pb_home_page_clicked();
     void on_pb_make_cmd_list_clicked();
+
+    void on_cb_autorepeat_interval_currentIndexChanged(const QString &arg1);
 
 private:
     Ui::hell_serial *ui;

@@ -12,7 +12,7 @@ TEMPLATE = app
 INCLUDEPATH += qextserialport
 
 
-SOURCES += main.cpp\
+SOURCES += main.cpp \
         hell_serial.cpp \
     qhexedit2/chunks.cpp \
     qhexedit2/commands.cpp \
