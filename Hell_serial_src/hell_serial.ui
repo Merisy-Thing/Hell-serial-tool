@@ -269,6 +269,12 @@ S:second</string>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QPushButton" name="pb_save_raw_data">
+       <property name="maximumSize">
+        <size>
+         <width>56</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -301,6 +307,12 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_record_raw_data">
+       <property name="maximumSize">
+        <size>
+         <width>56</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>

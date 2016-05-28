@@ -1,6 +1,7 @@
 #include "hell_serial.h"
 #include "ui_hell_serial.h"
 
+#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QRegExp>
@@ -334,6 +335,14 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
         }
         //qDebug("%s",c.data());
         m_qserial_port->write(c);
+    }
+}
+
+void hell_serial::moveEvent(QMoveEvent * event)
+{
+    //qDebug("moveEvent x=%d y=%d", event->pos().x(), event->pos().y());
+    if(ui->dw_cmd_tools->isVisible()) {
+        ui->dw_cmd_tools->move( event->pos().x() + this->width()+8, event->pos().y());
     }
 }
 
@@ -675,11 +684,10 @@ void hell_serial::on_pb_make_cmd_list_clicked()
             new_custom_cmd_item(0, ui->cb_custom_cmd_list->currentText());
         }
         ui->dw_cmd_tools->setVisible(true);
+        //qDebug("ui->dw_cmd_tools->width()=%d", ui->dw_cmd_tools->width());
+
         QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
-
-        ui->dw_cmd_tools->move( pos.x() + ui->cb_custom_cmd_list->width(),
-                                pos.y()+ m_hex_edit->y());
-
+        ui->dw_cmd_tools->move( pos.x() + this->width()+8, pos.y());
     } else {
         new_custom_cmd_item(m_custom_cmd_item_list.size(), ui->cb_custom_cmd_list->currentText());
     }
@@ -739,3 +747,4 @@ void hell_serial::on_cb_autorepeat_interval_currentIndexChanged(const QString &a
 {
     m_hex_send_autorepeat_timer.setInterval(get_sampling_time(arg1));
 }
+
