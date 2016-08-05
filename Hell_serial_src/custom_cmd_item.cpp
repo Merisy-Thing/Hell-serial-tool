@@ -1,4 +1,5 @@
 #include "custom_cmd_item.h"
+#include <QMessageBox>
 
 custom_cmd_item::custom_cmd_item(int id, QWidget *parent) : QWidget(parent)
 {
@@ -65,6 +66,10 @@ void custom_cmd_item::on_pb_ascii_send_clicked()
 
 void custom_cmd_item::on_pb_remove_cmd_clicked()
 {
+    if(QMessageBox::question(this, tr("Warning"), tr("Confirm to remove item: ") + m_remove_cmd->text(),
+                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No){
+        return;
+    }
     emit remove_custom_cmd(m_remove_cmd->text().toInt());
 }
 

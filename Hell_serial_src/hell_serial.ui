@@ -200,12 +200,20 @@ S:second</string>
        <property name="editable">
         <bool>true</bool>
        </property>
+       <property name="currentText">
+        <string>500ms</string>
+       </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>6</number>
        </property>
        <item>
         <property name="text">
          <string>10ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>20ms</string>
         </property>
        </item>
        <item>
@@ -225,7 +233,17 @@ S:second</string>
        </item>
        <item>
         <property name="text">
+         <string>250ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>500ms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>750ms</string>
         </property>
        </item>
        <item>
@@ -518,6 +536,13 @@ S:second</string>
        </property>
        <property name="text">
         <string>Ascii Send</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_script_send">
+       <property name="text">
+        <string>Script</string>
        </property>
       </widget>
      </item>

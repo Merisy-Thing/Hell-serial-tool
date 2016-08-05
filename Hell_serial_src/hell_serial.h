@@ -48,8 +48,8 @@ private slots:
     void on_pb_ascii_send_clicked(bool checked);
     void on_pb_home_page_clicked();
     void on_pb_make_cmd_list_clicked();
-
     void on_cb_autorepeat_interval_currentIndexChanged(const QString &arg1);
+    void on_pb_script_send_clicked(bool checked);
 
 private:
     Ui::hell_serial *ui;
@@ -77,6 +77,7 @@ private:
     QStringList m_custom_cmd_string_list;
 
     bool is_ascii_mode;
+    QString m_last_script;
 
     QList<custom_cmd_item *> m_custom_cmd_item_list;
 
@@ -85,6 +86,8 @@ private:
     void stop_autorepeat();
     void new_custom_cmd_item(int id, const QString &command);
     void resize_custom_cmd_tools_box();
+    bool sleep_process(QString &line_data);
+    bool loop_process(QString &line_data, QFile &file);
 
 protected:
     void keyPressEvent ( QKeyEvent * event );

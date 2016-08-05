@@ -84,6 +84,10 @@ hell_serial::~hell_serial()
             }
             m_setting_file->endGroup();
         }
+        m_setting_file->beginGroup("Misc");
+        m_setting_file->setValue("LastScriptFile", m_last_script);
+        m_setting_file->endGroup();
+
         m_setting_file->sync();
     }
 
@@ -193,6 +197,9 @@ void hell_serial::ui_init()
         }
         m_setting_file->endGroup();
 
+        m_setting_file->beginGroup("Misc");
+        m_last_script = m_setting_file->value("LastScriptFile").toString();
+        m_setting_file->endGroup();
     } else {
         if(setting_file.open(QIODevice::WriteOnly)) {
             setting_file.close();
@@ -207,7 +214,8 @@ void hell_serial::ui_init()
     }
 
     ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
-
+    ui->cb_custom_cmd_list->view()->setFixedWidth(580);
+    //ui->cb_addon_module_list->view()->setFixedWidth(196);
 }
 
 void hell_serial::hex_edit_init()
@@ -274,7 +282,7 @@ void hell_serial::on_pb_port_ctrl_clicked()
             ui->pb_record_raw_data->setEnabled(true);
             ui->gb_port_setting->setEnabled(false);
         } else {
-            //qDebug("open fail");
+            ////qDebug("open fail");
         }
     }
 }
@@ -464,7 +472,7 @@ void hell_serial::add_custom_cmd_to_list(QString cmd)
             ui->cb_custom_cmd_list->insertItem(0,cmd);
             ui->cb_custom_cmd_list->setCurrentIndex(0);
         } else {
-            qDebug("can't found text = %s", cmd.toLatin1().data());
+            //qDebug("can't found text = %s", cmd.toLatin1().data());
         }
     }
 }
@@ -478,18 +486,18 @@ int hell_serial::get_sampling_time(QString time_str)
         num = time_str.left(time_str.length()-2).toInt(&ok);
         factor = 1;//ms base
         if(!ok) {
-            ui->cb_autorepeat_interval->setCurrentIndex(2);
+            ui->cb_autorepeat_interval->setCurrentIndex(3);
             return 100;
         }
     } else if(time_str.right(1) == "S"){
         num = time_str.left(time_str.length()-1).toInt(&ok);
         factor = 1000;//S base
         if(!ok) {
-            ui->cb_autorepeat_interval->setCurrentIndex(2);
+            ui->cb_autorepeat_interval->setCurrentIndex(3);
             return 100;
         }
     } else {
-        ui->cb_autorepeat_interval->setCurrentIndex(2);
+        ui->cb_autorepeat_interval->setCurrentIndex(3);
         return 100;
     }
 
@@ -498,7 +506,7 @@ int hell_serial::get_sampling_time(QString time_str)
         return num * factor;
     } else {
         //ui->cb_autorepeat_interval->setCurrentIndex(2);
-        qDebug("get_sampling_time faile 100 default");
+        //qDebug("get_sampling_time faile 100 default");
         return 100;
     }
 }
@@ -553,10 +561,12 @@ bool hell_serial::hex_send(const QString &_cmd)
 
     //odd number
     if(cmd.size() & 1) {
+        //qDebug("Odd:%s", cmd.toLatin1().data());
         QMessageBox::warning(this, tr("Error"), tr("Invalid data length, [Odd] length!"), QMessageBox::Yes );
         return false;
     }
 
+    //qDebug("%d, %s", cmd.size(), cmd.toLatin1().data());
     if(cmd.contains(QRegExp("[^0-9,A-F,a-f]"))) {
         QMessageBox::warning(this, tr("Error"), tr("Invalid data format, 0-9,A-F,a-f chars need!"), QMessageBox::Yes );
         return false;
@@ -748,3 +758,128 @@ void hell_serial::on_cb_autorepeat_interval_currentIndexChanged(const QString &a
     m_hex_send_autorepeat_timer.setInterval(get_sampling_time(arg1));
 }
 
+//msleep xxx
+bool hell_serial::sleep_process(QString &line_data)
+{
+    if(line_data.toLower().left(6) == "msleep") {
+        bool ok;
+        line_data.remove(0, 6);
+        line_data.remove(" ");
+        int delay_time = line_data.toInt(&ok);
+        if(ok && (delay_time > 0)) {
+            ui->pb_script_send->setText("Sleeping");
+            QTime dieTime = QTime::currentTime().addMSecs(delay_time);
+            while( QTime::currentTime() < dieTime ) {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+            }
+            ui->pb_script_send->setText("Sending");
+        } else {
+            QMessageBox::warning(this, tr("Warning"),
+                                 tr("Error delay param :" ) + line_data, QMessageBox::Yes );
+        }
+        return true;
+    }
+    return false;
+}
+
+//loop x
+//...
+//end
+bool hell_serial::loop_process(QString &line_data, QFile &file)
+{
+    if(line_data.toLower().left(4) != "loop") {
+        return false;
+    }
+    line_data.remove(0, 4);
+    line_data.remove(" ");
+
+    QStringList line_list;
+
+    bool ok;
+    int loop_cnt = line_data.toInt(&ok);
+    //qDebug("loop_cnt:%d", loop_cnt);
+    if(ok && (loop_cnt > 0)) {
+        //qDebug("start loop");
+        while(1) {
+            if(file.atEnd()) {
+                break;
+            }
+            QString line = QString(file.readLine());
+            if(line.toLower().left(3) != "end") {
+                line.remove(" ");
+                line.remove("\n");
+                line.remove("\r");
+                if(!line.isEmpty()) {
+                    line_list.append(line);
+                }
+            } else {
+                while(loop_cnt--) {
+                    for(int i=0; i<line_list.size(); i++) {
+                        QString item = line_list.at(i);
+                        //qDebug("loop:%s", item.toLatin1().data());
+                        if(sleep_process(item)) {
+                            ;
+                        } else {
+                            hex_send(item);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        //qDebug("end loop");
+    }
+    return true;
+}
+
+void hell_serial::on_pb_script_send_clicked(bool checked)
+{
+    if(!m_qserial_port->isOpen()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
+        return;
+    }
+
+    QString input_file;
+    QString curr_file = ui->cb_custom_cmd_list->currentText();
+    if((curr_file.left(7) == "file://") && (curr_file.right(4) == ".hss")) {
+        input_file = curr_file.remove(0, 7);
+    } else {
+        input_file = QFileDialog::getOpenFileName(this, "send file",
+                                        m_last_script, tr("Scrip (*.hss);;All (*.*)"));
+    }
+
+    QFile file(input_file);
+    if(!file.exists()) {
+        return;
+    }
+    m_last_script = input_file;
+    add_custom_cmd_to_list("file://" + input_file);
+
+    if(!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, tr("Warning"), tr("Open file error!"), QMessageBox::Yes );
+        return;
+    }
+    QString pb_text = ui->pb_script_send->text();
+    ui->pb_script_send->setText("Sending");
+    ui->pb_script_send->setEnabled(false);
+    while(!file.atEnd()) {
+        QString line_data = QString(file.readLine());
+
+        line_data.remove("\n");
+        line_data.remove("\r");
+
+        if(sleep_process(line_data)) {
+            ;
+        } else if(loop_process(line_data, file)) {
+            ;
+        } else {
+            if(!hex_send(line_data)) {
+                //break;
+            }
+        }
+    }
+
+    file.close();
+    ui->pb_script_send->setText(pb_text);
+    ui->pb_script_send->setEnabled(true);
+}
