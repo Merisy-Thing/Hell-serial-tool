@@ -25,6 +25,8 @@ LuaPlugin::LuaPlugin(QSettings *setting_file, QWidget *parent) :
     ui->cb_plugin_file_list->setMaxVisibleItems(32);
     //ui->cb_plugin_file_list->view()->setFixedWidth(320);
 
+    ui->pte_lua_debug_msg->setMaximumBlockCount(3000);
+
     m_setting_file = setting_file;
     m_setting_file->beginGroup("PluginFileList");
     QString file;
@@ -77,6 +79,8 @@ void LuaPlugin::keyPressEvent ( QKeyEvent * e )
             if(m_luaTextChanged) {
                 on_pb_save_plugin_file_clicked();
             }
+        } else if(e->key() == Qt::Key_F5){
+            on_pb_run_plugin_clicked(true);
         }
     }
 }
@@ -140,11 +144,14 @@ void LuaPlugin::on_pb_load_plugin_file_clicked()
 
 void LuaPlugin::luaTextChanged()
 {
-    if(!m_currPluginFile.isEmpty()) {
-        m_luaTextChanged = true;
+
+    m_luaTextChanged = true;
+    if(m_currPluginFile.isEmpty()) {
+        setWindowTitle("[New Plugin]");
+    } else {
         setWindowTitle("[Changed] " + m_currPluginFile);
-        ui->pb_save_plugin_file->setEnabled(true);
     }
+    ui->pb_save_plugin_file->setEnabled(true);
 }
 
 void LuaPlugin::file_watcher_fileChanged(QString path)
@@ -165,6 +172,15 @@ void LuaPlugin::on_pb_save_plugin_file_clicked()
     if(!m_luaTextChanged) {
         return;
     }
+
+    if(m_currPluginFile.isEmpty()) {
+        QString output_file = QFileDialog::getSaveFileName(NULL, tr("Save file"), "", tr("All (*.*)"));
+        if( output_file.isEmpty() ) {
+            return;
+        }
+        m_currPluginFile = output_file;
+    }
+
     if(m_file_watcher.files().size()) {
         m_file_watcher.removePaths(m_file_watcher.files());
     }
@@ -188,6 +204,7 @@ void LuaPlugin::on_pb_save_plugin_file_clicked()
 void LuaPlugin::on_pb_run_plugin_clicked(bool checked)
 {
     if(checked) {
+        ui->pb_run_plugin->setChecked(true);
         QByteArray text = ui->pte_lua_text->toPlainText().toUtf8();
         m_lua_bind->lua_bind_do_string(text);
         ui->pb_run_plugin->setText("Stop");
@@ -217,4 +234,20 @@ void LuaPlugin::on_pb_plugin_help_clicked()
     for(int i=0; i<help.size(); i++) {
         ui->pte_lua_debug_msg->appendPlainText(help.at(i));
     }
+}
+
+void LuaPlugin::on_pb_new_plugin_file_clicked()
+{
+    if(m_luaTextChanged) {
+        if(QMessageBox::question(this, tr("Warning"), "Save current file?\r\n" + m_currPluginFile,
+                                 QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
+            on_pb_save_plugin_file_clicked();
+        }
+    }
+    if(m_file_watcher.files().size()) {
+        m_file_watcher.removePaths(m_file_watcher.files());
+    }
+    m_currPluginFile.clear();
+    ui->pte_lua_text->clear();
+    m_luaTextChanged = false;
 }

@@ -364,7 +364,7 @@ void hell_serial::moveEvent(QMoveEvent * event)
         ui->dw_cmd_tools->move( event->pos().x() + this->width()+8, event->pos().y());
     }
     if(m_LuaPlugin->isVisible()) {
-        m_LuaPlugin->move(event->pos().x() + this->width()+8, event->pos().y() - 32);
+        m_LuaPlugin->move(event->pos().x() + this->width()+8, event->pos().y() - 30);
     }
 }
 
@@ -914,7 +914,7 @@ void hell_serial::on_pb_plugin_dlg_clicked()
         m_LuaPlugin->setVisible(false);
     } else {
         QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
-        m_LuaPlugin->move( pos.x() + this->width()+8, pos.y()-32);
+        m_LuaPlugin->move( pos.x() + this->width()+8, pos.y()-30);
         m_LuaPlugin->setVisible(true);
     }
 }

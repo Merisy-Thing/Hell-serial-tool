@@ -35,6 +35,8 @@ private slots:
     void on_pb_clear_lua_dbg_msg_clicked();
     void on_pb_plugin_help_clicked();
 
+    void on_pb_new_plugin_file_clicked();
+
 private:
     Ui::LuaPlugin *ui;
 

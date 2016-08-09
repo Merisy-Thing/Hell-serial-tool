@@ -38,12 +38,31 @@
       <number>3</number>
      </property>
      <item>
+      <widget class="QPushButton" name="pb_new_plugin_file">
+       <property name="maximumSize">
+        <size>
+         <width>32</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="text">
+        <string>New</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pb_save_plugin_file">
        <property name="maximumSize">
         <size>
          <width>40</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="text">
         <string>Save</string>
@@ -58,6 +77,9 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Browse</string>
        </property>
@@ -71,6 +93,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="maxVisibleItems">
         <number>32</number>
        </property>
@@ -81,6 +106,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="pb_load_plugin_file">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Load</string>
        </property>
@@ -88,6 +116,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="pb_run_plugin">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Run</string>
        </property>
@@ -112,6 +143,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="focusPolicy">
+       <enum>Qt::StrongFocus</enum>
+      </property>
       <property name="lineWrapMode">
        <enum>QPlainTextEdit::NoWrap</enum>
       </property>
@@ -135,7 +169,14 @@
       <widget class="QWidget" name="dockWidgetContents">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPlainTextEdit" name="pte_lua_debug_msg"/>
+         <widget class="QPlainTextEdit" name="pte_lua_debug_msg">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QPlainTextEdit::NoWrap</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
@@ -144,6 +185,15 @@
           </property>
           <item>
            <widget class="QPushButton" name="pb_plugin_help">
+            <property name="maximumSize">
+             <size>
+              <width>40</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="text">
              <string>Help</string>
             </property>
@@ -164,6 +214,21 @@
           </item>
           <item>
            <widget class="QPushButton" name="pb_clear_lua_dbg_msg">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>40</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="text">
              <string>Clear</string>
             </property>
