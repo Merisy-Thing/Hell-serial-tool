@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>LuaPlugin</class>
  <widget class="QDialog" name="LuaPlugin">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -100,11 +103,11 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QPlainTextEdit" name="pte_lua_text">
+     <widget class="CodeEditor" name="pte_lua_text">
       <property name="font">
        <font>
         <family>Courier New</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -113,7 +116,7 @@
        <enum>QPlainTextEdit::NoWrap</enum>
       </property>
       <property name="tabStopWidth">
-       <number>32</number>
+       <number>36</number>
       </property>
       <property name="cursorWidth">
        <number>2</number>
@@ -125,6 +128,9 @@
         <width>0</width>
         <height>0</height>
        </size>
+      </property>
+      <property name="features">
+       <set>QDockWidget::DockWidgetMovable</set>
       </property>
       <widget class="QWidget" name="dockWidgetContents">
        <layout class="QHBoxLayout" name="horizontalLayout">
@@ -172,6 +178,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CodeEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>code_editor.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

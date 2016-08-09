@@ -53,6 +53,8 @@ private slots:
     void on_cb_autorepeat_interval_currentIndexChanged(const QString &arg1);
     void on_pb_script_send_clicked(bool checked);
 
+    void on_pb_plugin_dlg_clicked();
+
 private:
     Ui::hell_serial *ui;
 

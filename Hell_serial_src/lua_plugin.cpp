@@ -123,6 +123,12 @@ void LuaPlugin::on_pb_load_plugin_file_clicked()
 
     ui->pte_lua_text->setPlainText(lua_str);
     m_currPluginFile = ui->cb_plugin_file_list->currentText();
+    int item_idx = ui->cb_plugin_file_list->findText(m_currPluginFile);
+    if(item_idx > 0) {
+        ui->cb_plugin_file_list->removeItem(item_idx);
+        ui->cb_plugin_file_list->insertItem(0, m_currPluginFile);
+        ui->cb_plugin_file_list->setCurrentIndex(0);
+    }
     setWindowTitle(m_currPluginFile);
 
     if(m_file_watcher.files().size()) {

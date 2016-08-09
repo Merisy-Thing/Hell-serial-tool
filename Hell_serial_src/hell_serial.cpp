@@ -221,7 +221,8 @@ void hell_serial::ui_init()
     //ui->cb_addon_module_list->view()->setFixedWidth(196);
 
     m_LuaPlugin = new LuaPlugin(m_setting_file, this);
-    m_LuaPlugin->setVisible(true);
+    m_LuaPlugin->setVisible(false);
+    m_LuaPlugin->setModal(false);
 }
 
 void hell_serial::hex_edit_init()
@@ -361,6 +362,9 @@ void hell_serial::moveEvent(QMoveEvent * event)
     //qDebug("moveEvent x=%d y=%d", event->pos().x(), event->pos().y());
     if(ui->dw_cmd_tools->isVisible()) {
         ui->dw_cmd_tools->move( event->pos().x() + this->width()+8, event->pos().y());
+    }
+    if(m_LuaPlugin->isVisible()) {
+        m_LuaPlugin->move(event->pos().x() + this->width()+8, event->pos().y() - 32);
     }
 }
 
@@ -902,4 +906,15 @@ void hell_serial::on_pb_script_send_clicked(bool checked)
     file.close();
     ui->pb_script_send->setText(pb_text);
     ui->pb_script_send->setEnabled(true);
+}
+
+void hell_serial::on_pb_plugin_dlg_clicked()
+{
+    if(m_LuaPlugin->isVisible()) {
+        m_LuaPlugin->setVisible(false);
+    } else {
+        QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
+        m_LuaPlugin->move( pos.x() + this->width()+8, pos.y()-32);
+        m_LuaPlugin->setVisible(true);
+    }
 }

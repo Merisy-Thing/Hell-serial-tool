@@ -292,6 +292,9 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_script_send">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Script</string>
        </property>
@@ -299,6 +302,9 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_plugin_dlg">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Plugin</string>
        </property>

@@ -53,7 +53,8 @@ SOURCES += main.cpp \
     lua_5.3.x/lutf8lib.c \
     lua_5.3.x/lvm.c \
     lua_5.3.x/lzio.c \
-    luahighlighter.cpp
+    luahighlighter.cpp \
+    code_editor.cpp
 
 HEADERS  += hell_serial.h \
     qhexedit2/chunks.h \
@@ -88,7 +89,8 @@ HEADERS  += hell_serial.h \
     lua_5.3.x/lundump.h \
     lua_5.3.x/lvm.h \
     lua_5.3.x/lzio.h \
-    luahighlighter.h
+    luahighlighter.h \
+    code_editor.h
 
 FORMS    += hell_serial.ui \
     lua_plugin.ui
