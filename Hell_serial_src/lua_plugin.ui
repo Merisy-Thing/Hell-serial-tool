@@ -31,8 +31,17 @@
    </property>
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QPushButton" name="pb_save_plugin_file">
+       <property name="maximumSize">
+        <size>
+         <width>40</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="text">
         <string>Save</string>
        </property>
@@ -40,6 +49,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="pb_browse_plugin_file">
+       <property name="maximumSize">
+        <size>
+         <width>56</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="text">
         <string>Browse</string>
        </property>
@@ -48,10 +63,16 @@
      <item>
       <widget class="QComboBox" name="cb_plugin_file_list">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="maxVisibleItems">
+        <number>32</number>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QComboBox::AdjustToMinimumContentsLength</enum>
        </property>
       </widget>
      </item>
@@ -115,6 +136,13 @@
           <property name="spacing">
            <number>3</number>
           </property>
+          <item>
+           <widget class="QPushButton" name="pb_plugin_help">
+            <property name="text">
+             <string>Help</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <spacer name="verticalSpacer">
             <property name="orientation">

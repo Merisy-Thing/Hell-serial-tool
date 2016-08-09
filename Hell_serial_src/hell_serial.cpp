@@ -220,7 +220,7 @@ void hell_serial::ui_init()
     ui->cb_custom_cmd_list->view()->setFixedWidth(580);
     //ui->cb_addon_module_list->view()->setFixedWidth(196);
 
-    m_LuaPlugin = new LuaPlugin(this);
+    m_LuaPlugin = new LuaPlugin(m_setting_file, this);
     m_LuaPlugin->setVisible(true);
 }
 
@@ -336,7 +336,6 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
         case Qt::Key_Space:
             //qDebug("Key_Space");
             c.push_back(' ');
-            break;
             break;
         default :
             QByteArray key_code = event->text().toLatin1();

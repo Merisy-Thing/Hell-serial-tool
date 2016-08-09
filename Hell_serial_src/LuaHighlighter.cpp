@@ -11,7 +11,9 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
     keywordFormat.setFontWeight(QFont::Bold);
     QStringList keywordPatterns;
 
-    keywordPatterns << "\\bfunction\\b"     << "\\bend\\b"          << "\\bwhile\\b"
+    keywordPatterns << "\\bGetSaveFileName\\b"     << "\\bmsleep\\b" << "\\bSerialPortRead\\b"
+                    << "\\bSerialPortWrite\\b"     << "\\bGetOpenFileName\\b"
+                    << "\\bfunction\\b"     << "\\bend\\b"          << "\\bwhile\\b"
                     << "\\bfor\\b"          << "\\buntil\\b"        << "\\band\\b"
                     << "\\bbreak\\b"        << "\\bdo\\b"           << "\\belse\\b"
                     << "\\bbelseif\\b"      << "\\bfalse\\b"        << "\\bif\\b"
