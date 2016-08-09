@@ -32,6 +32,7 @@ hell_serial::hell_serial(QWidget *parent) :
     this->show();
 
     connect(m_qserial_port, SIGNAL(readyRead()), this, SLOT(readSerialData()));
+    connect(m_LuaPlugin->m_lua_bind, SIGNAL(SerialPortWrite(QByteArray)), this, SLOT(plugin_SerialPortWrite(QByteArray)));
 
     connect(&m_hex_send_autorepeat_timer, SIGNAL(timeout ()),
             this,       SLOT(autorepeat_hex_send()));
@@ -91,6 +92,7 @@ hell_serial::~hell_serial()
         m_setting_file->sync();
     }
 
+    delete m_LuaPlugin;
     delete ui;
 }
 
@@ -138,6 +140,7 @@ void hell_serial::ui_init()
     }
     ui->cb_parity->setMaxVisibleItems(5);
     ui->cb_parity->setCurrentIndex(0);
+    ui->cb_data_bits->setVisible(false);
 
     //Stop bits
     string_list.clear();
@@ -216,6 +219,9 @@ void hell_serial::ui_init()
     ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
     ui->cb_custom_cmd_list->view()->setFixedWidth(580);
     //ui->cb_addon_module_list->view()->setFixedWidth(196);
+
+    m_LuaPlugin = new LuaPlugin(this);
+    m_LuaPlugin->setVisible(true);
 }
 
 void hell_serial::hex_edit_init()
@@ -290,6 +296,11 @@ void hell_serial::on_pb_port_ctrl_clicked()
 void hell_serial::readSerialData()
 {
     QByteArray data = m_qserial_port->readAll();
+
+    if(m_LuaPlugin->m_lua_bind->isRunning()) {
+        //qDebug("Plugin read data len:%d", data.size());
+        m_LuaPlugin->m_lua_bind->lua_bind_receive_serial_data(data);
+    }
 
     if(is_ascii_mode) {
         QTextCursor cursor = ui->pte_out_ascii_mode->textCursor();
@@ -462,6 +473,10 @@ void hell_serial::on_pb_always_visible_clicked()
 
 void hell_serial::add_custom_cmd_to_list(QString cmd)
 {
+    if(!ui->pb_script_send->isEnabled()) {
+        return;
+    }
+
     if(!m_custom_cmd_string_list.contains(cmd)) {
         m_custom_cmd_string_list.push_back(cmd);
         ui->cb_custom_cmd_list->insertItem(0, cmd);
@@ -591,6 +606,12 @@ bool hell_serial::hex_send(const QString &_cmd)
     return false;
 }
 
+void hell_serial::plugin_SerialPortWrite(QByteArray wr_data)
+{
+    if(m_qserial_port->isOpen()) {
+        m_qserial_port->write(wr_data);
+    }
+}
 
 void hell_serial::on_pb_ascii_send_clicked(bool checked)
 {
@@ -844,7 +865,7 @@ void hell_serial::on_pb_script_send_clicked(bool checked)
     if((curr_file.left(7) == "file://") && (curr_file.right(4) == ".hss")) {
         input_file = curr_file.remove(0, 7);
     } else {
-        input_file = QFileDialog::getOpenFileName(this, "send file",
+        input_file = QFileDialog::getOpenFileName(this, "Scrip file",
                                         m_last_script, tr("Scrip (*.hss);;All (*.*)"));
     }
 

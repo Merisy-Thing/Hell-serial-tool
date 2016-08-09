@@ -98,6 +98,9 @@
    </item>
    <item row="2" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QGroupBox" name="gb_port_setting">
        <property name="title">
@@ -149,6 +152,12 @@
         </item>
         <item>
          <widget class="QComboBox" name="cb_stop_bits">
+          <property name="maximumSize">
+           <size>
+            <width>32</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
@@ -169,6 +178,19 @@
         <string>Open</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -269,15 +291,16 @@ S:second</string>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pb_clear">
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="toolTip">
-        <string>Clear the display area</string>
-       </property>
+      <widget class="QPushButton" name="pb_script_send">
        <property name="text">
-        <string>Clear</string>
+        <string>Script</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_plugin_dlg">
+       <property name="text">
+        <string>Plugin</string>
        </property>
       </widget>
      </item>
@@ -540,9 +563,15 @@ S:second</string>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pb_script_send">
+      <widget class="QPushButton" name="pb_clear">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="toolTip">
+        <string>Clear the display area</string>
+       </property>
        <property name="text">
-        <string>Script</string>
+        <string>Clear</string>
        </property>
       </widget>
      </item>

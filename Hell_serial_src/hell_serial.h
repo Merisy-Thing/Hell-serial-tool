@@ -10,6 +10,7 @@
 #include <QtSerialPort/QtSerialPort>
 #include "qhexedit2/qhexedit.h"
 #include "custom_cmd_item.h"
+#include "lua_plugin.h"
 
 namespace Ui {
     class hell_serial;
@@ -33,6 +34,7 @@ private slots:
     void cmdToolBox_remove_custom_cmd(int id);
     void autorepeat_hex_send();
     void autorepeat_ascii_send();
+    void plugin_SerialPortWrite(QByteArray wr_data);
 
     void on_pb_port_ctrl_clicked();
     void on_pb_clear_clicked();
@@ -80,6 +82,8 @@ private:
     QString m_last_script;
 
     QList<custom_cmd_item *> m_custom_cmd_item_list;
+
+    LuaPlugin *m_LuaPlugin;
 
     void add_custom_cmd_to_list(QString cmd);
     int  get_sampling_time(QString time_str);
