@@ -21,7 +21,7 @@ public:
     ~lua_bind();
 
     void lua_bind_receive_serial_data(QByteArray &serial_data);
-    void lua_bind_abort() { m_abort_plugin = true; }
+    void lua_bind_abort();
     int  lua_bind_do_string(QByteArray &lua_str);
 
 private:

@@ -42,6 +42,7 @@ LuaPlugin::LuaPlugin(QSettings *setting_file, QWidget *parent) :
 
 LuaPlugin::~LuaPlugin()
 {
+    //qDebug("~LuaPlugin()");
     delete m_LuaHighlighter;
     delete ui;
 }
@@ -58,6 +59,9 @@ void LuaPlugin::closeEvent ( QCloseEvent * e )
             m_setting_file->setValue("File" + QString::number(i), ui->cb_plugin_file_list->itemText(i));
         }
         m_setting_file->endGroup();
+        //qDebug("closeEvent()");
+        this->hide();
+        e->ignore();
     }
 }
 

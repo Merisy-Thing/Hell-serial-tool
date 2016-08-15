@@ -130,6 +130,19 @@ int lua_bind::lua_bind_do_string(QByteArray &lua_str)
     return 0;
 }
 
+void lua_bind::lua_bind_abort()
+{
+    m_abort_plugin = true;
+    for(int i=0; i<10000; i++) {
+        //qDebug("wait");
+        if(!isRunning()) {
+            return;
+        }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 1000);
+    }
+    terminate();
+}
+
 void lua_bind::run()
 {
     if(m_lua_string.isEmpty()) {
@@ -137,14 +150,14 @@ void lua_bind::run()
     }
     m_abort_plugin = false;
 
-    //qDebug("lua_bind start ");
+    qDebug("lua_bind start ");
     int ret = luaL_dostring(L, m_lua_string.data());
 
     if(ret != LUA_OK) {
         emit printMsg("ERROR: " + QString(lua_tostring(L,-1)));
         //popup_msg_box("Run error :\r\n  " + QString() + "\r\nReturn value = " + QString::number(ret));
     }
-    //qDebug("lua_bind end ");
+    qDebug("lua_bind end ");
 }
 
 int lua_bind::lua_bind_SerialPortWrite(lua_State *_L)
