@@ -171,7 +171,7 @@
         <item>
          <widget class="QPlainTextEdit" name="pte_lua_debug_msg">
           <property name="focusPolicy">
-           <enum>Qt::NoFocus</enum>
+           <enum>Qt::ClickFocus</enum>
           </property>
           <property name="lineWrapMode">
            <enum>QPlainTextEdit::NoWrap</enum>

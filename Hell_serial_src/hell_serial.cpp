@@ -357,14 +357,20 @@ void hell_serial::keyPressEvent ( QKeyEvent * event )
     }
 }
 
-void hell_serial::moveEvent(QMoveEvent * event)
+void hell_serial::moveEvent(QMoveEvent * e)
 {
     //qDebug("moveEvent x=%d y=%d", event->pos().x(), event->pos().y());
     if(ui->dw_cmd_tools->isVisible()) {
-        ui->dw_cmd_tools->move( event->pos().x() + this->width()+8, event->pos().y());
+        ui->dw_cmd_tools->move( e->pos().x() + this->width()+8, e->pos().y());
     }
     if(m_LuaPlugin->isVisible()) {
-        m_LuaPlugin->move(event->pos().x() + this->width()+8, event->pos().y() - 30);
+        if((m_LuaPlugin->pos().x() < e->oldPos().x() + this->width())
+                && (m_LuaPlugin->pos().y() < e->oldPos().y() + this->height()) ) {
+            m_LuaPlugin->move(m_LuaPlugin->pos().x() + e->pos().x() - e->oldPos().x(),
+                              m_LuaPlugin->pos().y() + e->pos().y() - e->oldPos().y() );
+        } else {
+            m_LuaPlugin->move(e->pos().x() + this->width()+8, e->pos().y() - 30);
+        }
     }
 }
 

@@ -97,7 +97,7 @@ private:
 
 protected:
     void keyPressEvent ( QKeyEvent * event );
-    void moveEvent(QMoveEvent * event);
+    void moveEvent(QMoveEvent * e);
 };
 
 #endif // HELL_SERIAL_H

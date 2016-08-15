@@ -1,6 +1,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
-
+#include <QScrollBar>
 #include "lua_plugin.h"
 #include "ui_lua_plugin.h"
 
@@ -94,6 +94,7 @@ void LuaPlugin::pluginFinished()
 void LuaPlugin::pluginPrintMsg(QString msg)
 {
     ui->pte_lua_debug_msg->appendPlainText(msg);
+    ui->pte_lua_debug_msg->verticalScrollBar()->setValue(ui->pte_lua_debug_msg->verticalScrollBar()->maximum());
 }
 
 void LuaPlugin::on_pb_browse_plugin_file_clicked()
@@ -177,6 +178,9 @@ void LuaPlugin::on_pb_save_plugin_file_clicked()
         QString output_file = QFileDialog::getSaveFileName(NULL, tr("Save file"), "", tr("All (*.*)"));
         if( output_file.isEmpty() ) {
             return;
+        }
+        if(output_file.right(4) != ".lua") {
+            output_file += ".lua";
         }
         m_currPluginFile = output_file;
     }

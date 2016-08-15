@@ -4,6 +4,8 @@
 #include <QStringList>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTimer>
+
 
 lua_State *lua_bind::L = NULL;
 lua_bind  *lua_bind::m_this = NULL;
@@ -206,7 +208,7 @@ int lua_bind::lua_bind_SerialPortRead(lua_State *_L)
     }
     read_len = lua_tointeger(_L, -2);
     //qDebug("read_len = %d", read_len);
-    if( read_len <= 0) {
+    if( read_len < 0) {
         return 0;
     }
 
@@ -216,27 +218,31 @@ int lua_bind::lua_bind_SerialPortRead(lua_State *_L)
 
     //qDebug("lua_bind_SerialPortRead, read len: %d", read_len);
 
+    QTimer tm;
+    tm.setTimerType(Qt::PreciseTimer);
+    tm.setSingleShot(true);
+    tm.start(timeout);
     do {
         if(m_abort_plugin) {
             //qDebug("lua_bind_SerialPortRead: abort");
             return 0;
         }
-        msleep(1);
 
         m_serial_data_mutex.lock();
         readed_size = m_serial_data.size();
         m_serial_data_mutex.unlock();
+
         if( (read_len > 0) && (readed_size >= read_len )) {
+            //qDebug("read_len = %d, readed_size = %d", read_len, readed_size);
             break;
         }
-
-        if(timeout > 0) {
-            if( (--timeout) == 0) {
-                //readed_size = 0;
-                break;
-            }
+        if((timeout > 0) && (!tm.isActive())) {
+            break;
         }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, timeout);
     }while(1);
+
+    //qDebug("readed_size = %d", readed_size);
 
     if(!readed_size) {
         return 0;
@@ -247,7 +253,7 @@ int lua_bind::lua_bind_SerialPortRead(lua_State *_L)
 
     m_serial_data_mutex.lock();
     for(int i=0; i<m_serial_data.size(); i++) {
-        lua_pushinteger(_L, m_serial_data.at(i));
+        lua_pushinteger(_L, (uchar)m_serial_data.at(i));
         lua_rawseti (_L, -2, i+1);//1
     }
     m_serial_data.clear();
