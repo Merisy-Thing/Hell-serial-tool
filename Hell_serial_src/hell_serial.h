@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QList>
 #include <QtSerialPort/QtSerialPort>
+#include <QSerialPortInfo>
 #include "qhexedit2/qhexedit.h"
 #include "custom_cmd_item.h"
 #include "lua_plugin.h"
@@ -52,8 +53,8 @@ private slots:
     void on_pb_make_cmd_list_clicked();
     void on_cb_autorepeat_interval_currentIndexChanged(const QString &arg1);
     void on_pb_script_send_clicked(bool checked);
-
     void on_pb_plugin_dlg_clicked();
+    void on_cb_baudrate_activated(const QString &text);
 
 private:
     Ui::hell_serial *ui;
@@ -71,6 +72,7 @@ private:
     QTimer m_ascii_send_autorepeat_timer;
 
     QFile record_file;
+    QString m_record_file_name;
 
     QMap<QString, int> m_baudrate_map;
     //QMap<QString, int> m_data_bits_map;
@@ -94,10 +96,12 @@ private:
     void resize_custom_cmd_tools_box();
     bool sleep_process(QString &line_data);
     bool loop_process(QString &line_data, QFile &file);
+    void detect_serial_port();
 
 protected:
     void keyPressEvent ( QKeyEvent * event );
     void moveEvent(QMoveEvent * e);
+    bool nativeEvent(const QByteArray & eventType, void * message, long * result);
 };
 
 #endif // HELL_SERIAL_H

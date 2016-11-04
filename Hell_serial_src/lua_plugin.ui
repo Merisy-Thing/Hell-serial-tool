@@ -187,7 +187,7 @@
            <widget class="QPushButton" name="pb_plugin_help">
             <property name="maximumSize">
              <size>
-              <width>40</width>
+              <width>48</width>
               <height>16777215</height>
              </size>
             </property>
@@ -213,6 +213,16 @@
            </spacer>
           </item>
           <item>
+           <widget class="QCheckBox" name="cb_auto_clear">
+            <property name="text">
+             <string>Auto</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="pb_clear_lua_dbg_msg">
             <property name="minimumSize">
              <size>
@@ -222,7 +232,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>40</width>
+              <width>48</width>
               <height>16777215</height>
              </size>
             </property>

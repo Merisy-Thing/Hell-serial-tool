@@ -9,8 +9,15 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QScrollBar>
+#include <QToolTip>
 
-#define MAX_FILE_SIZE       512*1024
+#ifdef Q_OS_WIN32
+#include <WTypes.h>
+#include <dbt.h>
+#include <Windows.h>
+#endif
+
+#define MAX_FILE_SIZE               512*1024
 
 #define MAX_CUSTOM_CMD_NUM          64
 #define CUSTOM_CMD_FILE_NAME        "Hell_Serial.ini"
@@ -87,6 +94,7 @@ hell_serial::~hell_serial()
         }
         m_setting_file->beginGroup("Misc");
         m_setting_file->setValue("LastScriptFile", m_last_script);
+        m_setting_file->setValue("LastRecordFile", m_record_file_name);
         m_setting_file->endGroup();
 
         m_setting_file->sync();
@@ -103,19 +111,20 @@ void hell_serial::ui_init()
 
     //Port name list
     string = "COM%1";
-    for(int i=1; i<29; i++) {
-        ui->cb_port_name->insertItem(i,string.arg(i));
-    }
+    //for(int i=1; i<29; i++) {
+    //    ui->cb_port_name->insertItem(i,string.arg(i));
+    //}
+    detect_serial_port();
     ui->cb_port_name->setMaxVisibleItems(15);
     ui->cb_port_name->setCurrentIndex(0);
 
     //Baud Rate Type
     string_list <<  "2400"   <<  "4800"  <<  "9600"  <<  "14400" <<  "19200"
                 <<  "38400"  <<  "56000" <<  "57600" <<  "76800" <<  "115200"
-                <<  "128000" <<  "256000";
+                <<  "128000" <<  "256000" << "CUSTOM";
     ui->cb_baudrate->insertItems(0, string_list);
 
-    ui->cb_baudrate->setMaxVisibleItems(12);
+    ui->cb_baudrate->setMaxVisibleItems(ui->cb_baudrate->count());
     ui->cb_baudrate->setCurrentIndex(9);
 
     //Data bits
@@ -202,6 +211,7 @@ void hell_serial::ui_init()
 
         m_setting_file->beginGroup("Misc");
         m_last_script = m_setting_file->value("LastScriptFile").toString();
+        m_record_file_name = m_setting_file->value("LastRecordFile").toString();
         m_setting_file->endGroup();
     } else {
         if(setting_file.open(QIODevice::WriteOnly)) {
@@ -275,8 +285,10 @@ void hell_serial::on_pb_port_ctrl_clicked()
     } else {
         //open
         m_qserial_port->setPortName(ui->cb_port_name->currentText());
-        if(m_qserial_port->open(QIODevice::ReadWrite)) {
-            m_qserial_port->setBaudRate(ui->cb_baudrate->currentText().toInt());
+        bool ok = false;
+        int baudrate = ui->cb_baudrate->currentText().toInt(&ok);
+        if(ok && m_qserial_port->open(QIODevice::ReadWrite)) {
+            m_qserial_port->setBaudRate(baudrate);
             m_qserial_port->setDataBits((QSerialPort::DataBits)ui->cb_data_bits->currentText().toInt());
             m_qserial_port->setParity((QSerialPort::Parity)m_parity_map[ui->cb_parity->currentText()]);
             m_qserial_port->setStopBits((QSerialPort::StopBits)m_stop_bits_map[ui->cb_stop_bits->currentText()]);
@@ -289,7 +301,10 @@ void hell_serial::on_pb_port_ctrl_clicked()
             ui->pb_record_raw_data->setEnabled(true);
             ui->gb_port_setting->setEnabled(false);
         } else {
-            ////qDebug("open fail");
+            QPoint pos = QWidget::mapToGlobal(ui->pb_port_ctrl->pos());
+            //pos.setX(pos.x() + ui->pb_port_ctrl->width() - 16);
+            pos.setY(pos.y() + 42);
+            QToolTip::showText(pos, QString("Port open fail: ") + (ok ? "Port Busy" : "Baudrate Error"), ui->pb_port_ctrl);
         }
     }
 }
@@ -405,10 +420,11 @@ void hell_serial::on_pb_save_raw_data_clicked()
     }
 
     QString output_file = QFileDialog::getSaveFileName(this, tr("save file"),
-                                               "R:\\log.txt", tr("All (*.*)"));
+                                               m_record_file_name, tr("All (*.*)"));
     if(output_file.isEmpty() == true) {
         return;
     }
+    m_record_file_name = output_file;
 
     QFile file(output_file);
     if(!file.open(QIODevice::WriteOnly)) {
@@ -449,10 +465,11 @@ void hell_serial::on_pb_record_raw_data_clicked()
     if(!record_file.isOpen()) {
         //record_file
         QString f = QFileDialog::getSaveFileName(this, tr("save file"),
-                                                   "R:\\", tr("All (*.*)"));
+                                                   m_record_file_name, tr("All (*.*)"));
         if(f.isEmpty() == true) {
             return;
         }
+        m_record_file_name = f;
         record_file.setFileName(f);
         if(!record_file.open(QIODevice::WriteOnly)) {
             QMessageBox::warning(this, tr("Warning"), tr("Open file error!"), QMessageBox::Yes );
@@ -835,8 +852,8 @@ bool hell_serial::loop_process(QString &line_data, QFile &file)
                 break;
             }
             QString line = QString(file.readLine());
+            line.remove(" ");
             if(line.toLower().left(3) != "end") {
-                line.remove(" ");
                 line.remove("\n");
                 line.remove("\r");
                 if(!line.isEmpty()) {
@@ -864,6 +881,7 @@ bool hell_serial::loop_process(QString &line_data, QFile &file)
 
 void hell_serial::on_pb_script_send_clicked(bool checked)
 {
+    Q_UNUSED(checked);
     if(!m_qserial_port->isOpen()) {
         QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
         return;
@@ -922,5 +940,65 @@ void hell_serial::on_pb_plugin_dlg_clicked()
         QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
         m_LuaPlugin->move( pos.x() + this->width()+8, pos.y()-30);
         m_LuaPlugin->setVisible(true);
+    }
+}
+
+void hell_serial::detect_serial_port()
+{
+    QList<QSerialPortInfo> port_info_list = QSerialPortInfo::availablePorts();
+
+    ui->cb_port_name->clear();
+    QStringList list;
+    for(int i=0; i<port_info_list.size(); i++) {
+        QSerialPortInfo info = port_info_list.at(i);
+        //qDebug("%s: %s", info.portName().toLatin1().data(),
+        //                 info.description().toLatin1().data());
+        list.push_back(info.portName());
+    }
+    list.sort();
+    ui->cb_port_name->addItems(list);
+
+}
+
+bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long * result)
+{
+    Q_UNUSED(eventType);
+    Q_UNUSED(result);
+#ifdef Q_OS_WIN32
+    if(((MSG *)message)->message == WM_DEVICECHANGE) {
+        if (((MSG *)message)->wParam == DBT_DEVNODES_CHANGED) {
+            //qDebug("detect_serial_port");
+            bool port_opened = m_qserial_port->isOpen();
+            QString port_name = m_qserial_port->portName();
+            bool port_removed = true;
+
+            detect_serial_port();
+
+            if(port_opened) {
+                for(int i=0; i<ui->cb_port_name->count(); i++) {
+                    if(ui->cb_port_name->itemText(i) == port_name) {
+                        port_removed = false;
+                    }
+                }
+                if(port_removed) {
+                    on_pb_port_ctrl_clicked();
+                } else {
+                    ui->cb_port_name->setCurrentText(port_name);
+                }
+            }
+
+        }
+    }
+#endif
+    return false;
+}
+
+void hell_serial::on_cb_baudrate_activated(const QString &text)
+{
+    if(text == "CUSTOM") {
+        ui->cb_baudrate->setEditable(true);
+        ui->cb_baudrate->setCurrentText("");
+    } else {
+        ui->cb_baudrate->setEditable(false);
     }
 }

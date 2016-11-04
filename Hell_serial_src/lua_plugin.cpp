@@ -212,6 +212,9 @@ void LuaPlugin::on_pb_save_plugin_file_clicked()
 void LuaPlugin::on_pb_run_plugin_clicked(bool checked)
 {
     if(checked) {
+        if(ui->cb_auto_clear->isChecked()) {
+            ui->pte_lua_debug_msg->clear();
+        }
         ui->pb_run_plugin->setChecked(true);
         QByteArray text = ui->pte_lua_text->toPlainText().toUtf8();
         m_lua_bind->lua_bind_do_string(text);
