@@ -9,13 +9,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>693</width>
-    <height>513</height>
+    <width>802</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>600</width>
+    <width>720</width>
     <height>0</height>
    </size>
   </property>
@@ -317,6 +317,9 @@ S:second</string>
    </item>
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="spacing">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QPushButton" name="pb_save_raw_data">
        <property name="maximumSize">
@@ -357,12 +360,6 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_record_raw_data">
-       <property name="maximumSize">
-        <size>
-         <width>56</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -467,12 +464,6 @@ S:second</string>
          <height>0</height>
         </size>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>40</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="baseSize">
         <size>
          <width>64</width>
@@ -541,12 +532,6 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_hex_send">
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -557,12 +542,6 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_ascii_send">
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>

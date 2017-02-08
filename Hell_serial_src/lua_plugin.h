@@ -47,6 +47,8 @@ private:
     QFileSystemWatcher m_file_watcher;
     QSettings *m_setting_file;
 
+    void add_plugin_file_to_list(QString file);
+
 protected:
     void closeEvent ( QCloseEvent * e );
     void resizeEvent( QResizeEvent * e );

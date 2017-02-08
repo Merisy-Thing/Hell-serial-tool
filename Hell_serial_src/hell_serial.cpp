@@ -22,6 +22,8 @@
 #define MAX_CUSTOM_CMD_NUM          64
 #define CUSTOM_CMD_FILE_NAME        "Hell_Serial.ini"
 
+#define WG_MAXIMUM_WIDTH            720
+
 hell_serial::hell_serial(QWidget *parent) :
     QDialog(parent), ui(new Ui::hell_serial)
 {
@@ -34,7 +36,7 @@ hell_serial::hell_serial(QWidget *parent) :
 
     is_ascii_mode = false;
     ui->pte_out_ascii_mode->setVisible(false);
-    this->setMaximumWidth(600);
+    this->setMaximumWidth(WG_MAXIMUM_WIDTH);
     this->setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
     this->show();
 
@@ -314,11 +316,12 @@ void hell_serial::readSerialData()
     QByteArray data = m_qserial_port->readAll();
 
     if(m_LuaPlugin->m_lua_bind->isRunning()) {
-        //qDebug("Plugin read data len:%d", data.size());
+        qDebug("Plugin read data len:%d", data.size());
         m_LuaPlugin->m_lua_bind->lua_bind_receive_serial_data(data);
     }
 
     if(is_ascii_mode) {
+        //qDebug("is_ascii_mode");
         QTextCursor cursor = ui->pte_out_ascii_mode->textCursor();
         cursor.movePosition(QTextCursor::End);
         ui->pte_out_ascii_mode->setTextCursor(cursor);
@@ -331,6 +334,7 @@ void hell_serial::readSerialData()
         if(num > 0) {
             m_hex_edit->remove(0, num);
         }
+        qDebug("m_hex_edit->dataSize():%d", m_hex_edit->dataSize());
     }
     m_hex_edit->scrollToBottom();
 
@@ -686,7 +690,7 @@ void hell_serial::on_pb_mode_switch_clicked()
         ui->pte_out_ascii_mode->setVisible(false);
         ui->pte_out_ascii_mode->clear();
 
-        this->setMaximumWidth(600);
+        this->setMaximumWidth(WG_MAXIMUM_WIDTH);
         this->setWindowFlags(windowFlags() & (~Qt::WindowMaximizeButtonHint));
     } else {
         is_ascii_mode = true;
@@ -861,9 +865,10 @@ bool hell_serial::loop_process(QString &line_data, QFile &file)
                 }
             } else {
                 while(loop_cnt--) {
+                    //qDebug(" loop_cnt:%d", loop_cnt);
                     for(int i=0; i<line_list.size(); i++) {
                         QString item = line_list.at(i);
-                        //qDebug("loop:%s", item.toLatin1().data());
+                        qDebug("loop:%s", item.toLatin1().data());
                         if(sleep_process(item)) {
                             ;
                         } else {

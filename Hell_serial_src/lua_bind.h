@@ -40,6 +40,7 @@ private:
     int lua_bind_GetOpenFileName(lua_State *_L);
     int lua_bind_GetSaveFileName(lua_State *_L);
     int lua_bind_msleep(lua_State *_L);
+    int lua_bind_utf8ToLocal(lua_State *_L);
     int lua_bind_DebugMessage(lua_State *_L);
 
 private:
@@ -70,6 +71,9 @@ private:
     }
     static int _lua_bind_msleep(lua_State *_L) {
        return  m_this->lua_bind_msleep(_L);
+    }
+    static int _lua_bind_utf8ToLocal(lua_State *_L) {
+       return  m_this->lua_bind_utf8ToLocal(_L);
     }
 
 protected:

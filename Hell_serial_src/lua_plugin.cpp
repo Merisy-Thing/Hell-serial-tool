@@ -67,13 +67,13 @@ void LuaPlugin::closeEvent ( QCloseEvent * e )
 
 void LuaPlugin::resizeEvent( QResizeEvent * e )
 {
+    e = e;
     //qDebug("resizeEvent");
     QList<int> size_list;
     size_list.push_back(ui->splitter->height()*75/100);
     size_list.push_back(ui->splitter->height()*25/100);
     ui->splitter->setSizes(size_list);
 }
-
 void LuaPlugin::keyPressEvent ( QKeyEvent * e )
 {
     if(e->key() == Qt::Key_Escape) {
@@ -101,6 +101,18 @@ void LuaPlugin::pluginPrintMsg(QString msg)
     ui->pte_lua_debug_msg->verticalScrollBar()->setValue(ui->pte_lua_debug_msg->verticalScrollBar()->maximum());
 }
 
+void LuaPlugin::add_plugin_file_to_list(QString file)
+{
+    int item_idx = ui->cb_plugin_file_list->findText(file);
+    if(item_idx != 0) {
+        if(item_idx > 0) {
+            ui->cb_plugin_file_list->removeItem(item_idx);
+        }
+        ui->cb_plugin_file_list->insertItem(0, file);
+        ui->cb_plugin_file_list->setCurrentIndex(0);
+    }
+}
+
 void LuaPlugin::on_pb_browse_plugin_file_clicked()
 {
     QString plugin_file = QFileDialog::getOpenFileName(this, "Plugin file",
@@ -108,8 +120,7 @@ void LuaPlugin::on_pb_browse_plugin_file_clicked()
     if(plugin_file.isEmpty()) {
         return;
     }
-    ui->cb_plugin_file_list->insertItem(0, plugin_file);
-    ui->cb_plugin_file_list->setCurrentIndex(0);
+    add_plugin_file_to_list(plugin_file);
 
     on_pb_load_plugin_file_clicked();
 }
@@ -132,12 +143,6 @@ void LuaPlugin::on_pb_load_plugin_file_clicked()
 
     ui->pte_lua_text->setPlainText(lua_str);
     m_currPluginFile = ui->cb_plugin_file_list->currentText();
-    int item_idx = ui->cb_plugin_file_list->findText(m_currPluginFile);
-    if(item_idx > 0) {
-        ui->cb_plugin_file_list->removeItem(item_idx);
-        ui->cb_plugin_file_list->insertItem(0, m_currPluginFile);
-        ui->cb_plugin_file_list->setCurrentIndex(0);
-    }
     setWindowTitle(m_currPluginFile);
 
     if(m_file_watcher.files().size()) {
@@ -145,6 +150,8 @@ void LuaPlugin::on_pb_load_plugin_file_clicked()
     }
     m_file_watcher.addPath(m_currPluginFile);
     m_luaTextChanged = false;
+
+    add_plugin_file_to_list(m_currPluginFile);
 }
 
 void LuaPlugin::luaTextChanged()
@@ -205,8 +212,9 @@ void LuaPlugin::on_pb_save_plugin_file_clicked()
     file.close();
     setWindowTitle("[Saved] " + m_currPluginFile);
     ui->pb_save_plugin_file->setEnabled(false);
-     m_luaTextChanged = false;
-     m_file_watcher.addPath(m_currPluginFile);
+    m_luaTextChanged = false;
+    m_file_watcher.addPath(m_currPluginFile);
+    add_plugin_file_to_list(m_currPluginFile);
 }
 
 void LuaPlugin::on_pb_run_plugin_clicked(bool checked)
@@ -241,6 +249,7 @@ void LuaPlugin::on_pb_plugin_help_clicked()
     help << "  GetSaveFileName";
     help << "  print(...)";
     help << "  msleep(ms)";
+    help << "  utf8ToLocal(utf8_string)";
 
     for(int i=0; i<help.size(); i++) {
         ui->pte_lua_debug_msg->appendPlainText(help.at(i));

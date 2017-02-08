@@ -72,6 +72,7 @@ void lua_bind::lua_bind_init()
         {"GetSaveFileName",  &lua_bind::_lua_bind_GetSaveFileName},
         {"print",            &lua_bind::_lua_bind_DebugMessage},
         {"msleep",           &lua_bind::_lua_bind_msleep},
+        {"utf8ToLocal",      &lua_bind::_lua_bind_utf8ToLocal},
     };
 
     for(uint i=0; i<sizeof(api_list)/sizeof(t_api_list); i++) {
@@ -150,14 +151,14 @@ void lua_bind::run()
     }
     m_abort_plugin = false;
 
-    qDebug("lua_bind start ");
+    //qDebug("lua_bind start ");
     int ret = luaL_dostring(L, m_lua_string.data());
 
     if(ret != LUA_OK) {
         emit printMsg("ERROR: " + QString(lua_tostring(L,-1)));
         //popup_msg_box("Run error :\r\n  " + QString() + "\r\nReturn value = " + QString::number(ret));
     }
-    qDebug("lua_bind end ");
+    //qDebug("lua_bind end ");
 }
 
 int lua_bind::lua_bind_SerialPortWrite(lua_State *_L)
@@ -321,6 +322,25 @@ int lua_bind::lua_bind_msleep(lua_State *_L)
     msleep(ms);
 
     lua_pushboolean(_L, 1);
+    return 1;
+}
+
+int lua_bind::lua_bind_utf8ToLocal(lua_State *_L)
+{
+    if(lua_gettop(_L) != 1) {
+        return 0;
+    }
+    //L = utf8ToLocal("啊")
+    //print(L)
+    const char *putf8 = lua_tostring(_L, -1);
+    //qDebug("utf8: %s", putf8);
+    QString utf8(putf8);
+    if( utf8.isEmpty()) {
+        return 0;
+    }
+
+    lua_pushstring(_L, utf8.toLocal8Bit().data());
+
     return 1;
 }
 
