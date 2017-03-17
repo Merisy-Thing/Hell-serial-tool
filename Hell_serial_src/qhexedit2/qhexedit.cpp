@@ -917,10 +917,13 @@ void QHexEdit::paintEvent(QPaintEvent *event)
                 if (_asciiArea)
                 {
                     int ch = (uchar)_dataShown.at(bPosLine + colIdx);
-                    if ( ch < 0x20 )
-                        ch = '.';
                     r.setRect(pxPosAsciiX2, pxPosY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight);
                     painter.fillRect(r, c);
+                    if (ch < 0x20) {
+                        ch = 0xab;
+                    } else if((ch >= 0x7F) && (ch <= 0xA0)){
+                        ch = 0xbb;
+                    }
                     painter.drawText(pxPosAsciiX2, pxPosY, QChar(ch));
                     pxPosAsciiX2 += _pxCharWidth;
                 }
@@ -935,19 +938,31 @@ void QHexEdit::paintEvent(QPaintEvent *event)
         painter.fillRect(_cursorRect, this->palette().color(QPalette::WindowText));
     else
     {
-        painter.fillRect(QRect(_pxCursorX - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight),
-                         viewport()->palette().color(QPalette::BrightText));
+        painter.fillRect(QRect(_pxCursorX - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub - 1, _pxCharWidth, _pxCharHeight+1),
+                         viewport()->palette().color(QPalette::Light));
+        painter.setPen(QColor(234,234,234, 255));
         painter.drawRect(QRect(_pxCursorX0 - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight));
+        painter.setPen(QColor(00,210,00, 255));
         if (_editAreaIsAscii) {
             QByteArray ba = _dataShown.mid((_cursorPosition - _bPosFirst) / 2, 1);
             if (ba != "")
             {
-                if (ba.at(0) <= ' ')
-                    ba[0] = '.';
-                painter.drawText(_pxCursorX - pxOfsX, _pxCursorY, ba);
+                int ch = ba[0], h, l;
+                h = (ch>>4)&0xf;
+                l = ch&0xf;
+                h = (h>9) ? (h-10+'A') : (h+'0');
+                l = (l>9) ? (l-10+'A') : (l+'0');
+                QFont tmpFont = painter.font();
+                int pointSize = tmpFont.pointSize();
+                tmpFont.setPointSize(pointSize/3);
+                painter.setFont(tmpFont);
+                painter.drawText(_pxCursorX + 1, _pxCursorY - _pxSelectionSub - 2, QChar(h));
+                painter.drawText(_pxCursorX + 1, _pxCursorY + _pxCharHeight/2 - 2 - _pxSelectionSub, QChar(l));
+                tmpFont.setPointSize(pointSize);
+                painter.setFont(tmpFont);
             }
         } else {
-            painter.drawText(_pxCursorX - pxOfsX, _pxCursorY, _hexDataShown.mid(_cursorPosition - _bPosFirst, 1));
+            painter.drawText(_pxCursorX - pxOfsX, _pxCursorY, _hexDataShown.mid(_cursorPosition - _bPosFirst, 1).toUpper());
         }
     }
 

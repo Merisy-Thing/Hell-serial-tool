@@ -335,15 +335,6 @@ void hell_serial::readSerialData()
     }
     //m_hex_edit->insert(m_hex_edit->dataSize(), data);
     m_hex_edit->appendData(data);
-    /*
-    if(m_hex_edit->dataSize() > buffer_len) {
-        int num = ((m_hex_edit->dataSize() - buffer_len)/16)*16;
-        if(num > 0) {
-            m_hex_edit->remove(0, num);
-        }
-        qDebug("m_hex_edit->dataSize():%d", m_hex_edit->dataSize());
-    }*/
-
     m_hex_edit->scrollToBottom();
 
     if(record_file.isOpen()) {
