@@ -43,6 +43,10 @@ bool Chunks::setIODevice(QIODevice &ioDevice)
 
 
 // ***************************************** Getting data out of Chunks
+qint64 Chunks::dataSize()
+{
+    return _size;
+}
 
 bool Chunks::appendChunk(const QByteArray &data)
 {

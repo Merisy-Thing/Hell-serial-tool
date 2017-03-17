@@ -97,6 +97,7 @@ hell_serial::~hell_serial()
         m_setting_file->beginGroup("Misc");
         m_setting_file->setValue("LastScriptFile", m_last_script);
         m_setting_file->setValue("LastRecordFile", m_record_file_name);
+        m_setting_file->setValue("LastPortName", m_last_port_name);
         m_setting_file->endGroup();
 
         m_setting_file->sync();
@@ -116,7 +117,7 @@ void hell_serial::ui_init()
     //for(int i=1; i<29; i++) {
     //    ui->cb_port_name->insertItem(i,string.arg(i));
     //}
-    detect_serial_port();
+    detect_serial_port(false);
     ui->cb_port_name->setMaxVisibleItems(15);
     ui->cb_port_name->setCurrentIndex(0);
 
@@ -214,6 +215,7 @@ void hell_serial::ui_init()
         m_setting_file->beginGroup("Misc");
         m_last_script = m_setting_file->value("LastScriptFile").toString();
         m_record_file_name = m_setting_file->value("LastRecordFile").toString();
+        m_last_port_name = m_setting_file->value("LastPortName").toString();
         m_setting_file->endGroup();
     } else {
         if(setting_file.open(QIODevice::WriteOnly)) {
@@ -246,6 +248,7 @@ void hell_serial::hex_edit_init()
     m_hex_edit->setReadOnly(true);
     m_hex_edit->setAddressArea(false);
     m_hex_edit->setHighlighting(false);
+    m_hex_edit->setHexCaps(true);
 }
 
 
@@ -303,6 +306,7 @@ void hell_serial::on_pb_port_ctrl_clicked()
             ui->pb_send_file->setEnabled(true);
             ui->pb_record_raw_data->setEnabled(true);
             ui->gb_port_setting->setEnabled(false);
+            m_last_port_name = ui->cb_port_name->currentText();
         } else {
             QPoint pos = QWidget::mapToGlobal(ui->pb_port_ctrl->pos());
             //pos.setX(pos.x() + ui->pb_port_ctrl->width() - 16);
@@ -339,16 +343,16 @@ void hell_serial::readSerialData()
         }
         qDebug("m_hex_edit->dataSize():%d", m_hex_edit->dataSize());
     }*/
-    #warning "Fixme"
-    //m_hex_edit->scrollToBottom();
+
+    m_hex_edit->scrollToBottom();
 
     if(record_file.isOpen()) {
         record_file.write(data);
     }
 
     //qDebug("ascii num=%d", ui->pte_out_ascii_mode->blockCount());
-#warning "Fixme"
-    //ui->lb_dbg->setText(QString("%1").arg(m_hex_edit->dataSize()));
+
+    ui->lb_dbg->setText(QString("%1").arg(m_hex_edit->getDataSize()));
 }
 
 void hell_serial::keyPressEvent ( QKeyEvent * event )
@@ -399,8 +403,10 @@ void hell_serial::moveEvent(QMoveEvent * e)
 
 void hell_serial::on_pb_clear_clicked()
 {
-    //m_hex_edit->remove(0, m_hex_edit->dataSize());
-#warning "Fixme"
+    QByteArray empty;
+
+    m_hex_edit->setData(empty);
+
     ui->pte_out_ascii_mode->clear();
     ui->lb_dbg->setText("0");
 }
@@ -954,7 +960,7 @@ void hell_serial::on_pb_plugin_dlg_clicked()
     }
 }
 
-void hell_serial::detect_serial_port()
+void hell_serial::detect_serial_port(bool port_opened)
 {
     QList<QSerialPortInfo> port_info_list = QSerialPortInfo::availablePorts();
 
@@ -968,7 +974,11 @@ void hell_serial::detect_serial_port()
     }
     list.sort();
     ui->cb_port_name->addItems(list);
-
+    if(port_opened) {
+        if(list.contains(m_last_port_name)) {
+            ui->cb_port_name->setCurrentText(m_last_port_name);
+        }
+    }
 }
 
 bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long * result)
@@ -983,7 +993,7 @@ bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long
             QString port_name = m_qserial_port->portName();
             bool port_removed = true;
 
-            detect_serial_port();
+            detect_serial_port(port_opened);
 
             if(port_opened) {
                 for(int i=0; i<ui->cb_port_name->count(); i++) {

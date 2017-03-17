@@ -63,6 +63,7 @@ private:
     void hex_edit_init();
 
     QSerialPort *m_qserial_port;
+    QString m_last_port_name;
 
     QHexEdit *m_hex_edit;
 
@@ -96,7 +97,7 @@ private:
     void resize_custom_cmd_tools_box();
     bool sleep_process(QString &line_data);
     bool loop_process(QString &line_data, QFile &file);
-    void detect_serial_port();
+    void detect_serial_port(bool port_opened);
 
 protected:
     void keyPressEvent ( QKeyEvent * event );

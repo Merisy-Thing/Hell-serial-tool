@@ -29,13 +29,15 @@ QHexEdit::QHexEdit(QWidget *parent) : QAbstractScrollArea(parent)
     _chunks = new Chunks(this);
     _undoStack = new UndoStack(_chunks, this);
 #ifdef Q_OS_WIN32
-    setFont(QFont("Courier", 10));
+    setFont(QFont("Fixedsys", 12));
 #else
-    setFont(QFont("Monospace", 10));
+    setFont(QFont("Monospace", 12));
 #endif
     setAddressAreaColor(this->palette().alternateBase().color());
-    setHighlightingColor(QColor(0xff, 0xff, 0x99, 0xff));
-    setSelectionColor(this->palette().highlight().color());
+    setHighlightingColor(QColor(0, 0, 0, 0xff));
+    setSelectionColor(QColor(51, 153, 0xff, 0xff));
+    //setSelectionColor(this->palette().highlight().color());
+    setStyleSheet(QString::fromUtf8("background-color:Black; color:green"));
 
     connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
     connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(adjust()));
@@ -172,9 +174,11 @@ void QHexEdit::setCursorPosition(qint64 position)
     if (_editAreaIsAscii)
     {
         _pxCursorX = x / 2 * _pxCharWidth + _pxPosAsciiX;
+        _pxCursorX0 = (((x / 2) * 3) + (x % 2)) * _pxCharWidth + _pxPosHexX;
         _cursorPosition = position & 0xFFFFFFFFFFFFFFFE;
     } else {
         _pxCursorX = (((x / 2) * 3) + (x % 2)) * _pxCharWidth + _pxPosHexX;
+        _pxCursorX0 = x / 2 * _pxCharWidth + _pxPosAsciiX;
         _cursorPosition = position;
     }
 
@@ -229,6 +233,11 @@ void QHexEdit::setData(const QByteArray &ba)
 QByteArray QHexEdit::data()
 {
     return _chunks->data(0, -1);
+}
+
+qint64 QHexEdit::getDataSize()
+{
+    return _chunks->dataSize();
 }
 
 bool QHexEdit::appendData(const QByteArray &data)
@@ -926,7 +935,9 @@ void QHexEdit::paintEvent(QPaintEvent *event)
         painter.fillRect(_cursorRect, this->palette().color(QPalette::WindowText));
     else
     {
-        painter.fillRect(QRect(_pxCursorX - pxOfsX, _pxCursorY - _pxCharHeight, _pxCharWidth, _pxCharHeight), viewport()->palette().color(QPalette::Base));
+        painter.fillRect(QRect(_pxCursorX - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight),
+                         viewport()->palette().color(QPalette::BrightText));
+        painter.drawRect(QRect(_pxCursorX0 - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight));
         if (_editAreaIsAscii) {
             QByteArray ba = _dataShown.mid((_cursorPosition - _bPosFirst) / 2, 1);
             if (ba != "")
@@ -1091,6 +1102,11 @@ void QHexEdit::refresh()
 {
     ensureVisible();
     readBuffers();
+}
+
+void QHexEdit::scrollToBottom()
+{
+    QAbstractScrollArea::verticalScrollBar()->setValue(QAbstractScrollArea::verticalScrollBar()->maximum());
 }
 
 void QHexEdit::readBuffers()

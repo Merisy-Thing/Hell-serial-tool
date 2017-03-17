@@ -305,6 +305,7 @@ public:
     qint64 cursorPosition();
     void setCursorPosition(qint64 position);
 
+    qint64 getDataSize();
     bool appendData(const QByteArray &data);
     QByteArray data();
     void setData(const QByteArray &ba);
@@ -330,6 +331,7 @@ public:
     QColor selectionColor();
     void setSelectionColor(const QColor &color);
 
+    void scrollToBottom();
 protected:
     // Handle events
     void keyPressEvent(QKeyEvent *event);
@@ -369,6 +371,7 @@ private:
     int _pxCursorWidth;                         // cursor width
     int _pxSelectionSub;                        // offset selection rect
     int _pxCursorX;                             // current cursor pos
+    int _pxCursorX0;
     int _pxCursorY;                             // current cursor pos
 
     // Name convention: absolute byte positions in chunks start with _b

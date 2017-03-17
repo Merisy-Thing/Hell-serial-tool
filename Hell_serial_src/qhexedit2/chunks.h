@@ -36,6 +36,7 @@ public:
 
     //append data to last chank
     bool appendChunk(const QByteArray &data);
+    qint64 dataSize();
 
     // Getting data out of Chunks
     QByteArray data(qint64 pos=0, qint64 count=-1, QByteArray *highlighted=0);
