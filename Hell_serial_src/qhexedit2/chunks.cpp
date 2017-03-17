@@ -10,13 +10,13 @@
 
 // ***************************************** Constructors and file settings
 
-Chunks::Chunks()
+Chunks::Chunks(QObject *parent): QObject(parent)
 {
-    QBuffer *buf = new QBuffer();
+    QBuffer *buf = new QBuffer(this);
     setIODevice(*buf);
 }
 
-Chunks::Chunks(QIODevice &ioDevice)
+Chunks::Chunks(QIODevice &ioDevice, QObject *parent): QObject(parent)
 {
     setIODevice(ioDevice);
 }
@@ -32,7 +32,7 @@ bool Chunks::setIODevice(QIODevice &ioDevice)
     }
     else                                        // Fallback is an empty buffer
     {
-        QBuffer *buf = new QBuffer();
+        QBuffer *buf = new QBuffer(this);
         _ioDevice = buf;
         _size = 0;
     }
@@ -43,6 +43,23 @@ bool Chunks::setIODevice(QIODevice &ioDevice)
 
 
 // ***************************************** Getting data out of Chunks
+
+bool Chunks::appendChunk(const QByteArray &data)
+{
+    Chunk chunk;
+
+    if(data.isEmpty()) {
+        return false;
+    }
+
+    chunk.data = data;
+    chunk.dataChanged.clear();
+    chunk.absPos = 0;
+
+    _chunks.push_back(chunk);
+
+    return true;
+}
 
 QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *highlighted)
 {

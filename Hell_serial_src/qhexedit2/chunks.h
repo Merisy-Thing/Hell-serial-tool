@@ -26,13 +26,17 @@ struct Chunk
     qint64 absPos;
 };
 
-class Chunks
+class Chunks: public QObject
 {
+Q_OBJECT
 public:
     // Constructors and file settings
-    Chunks();
-    Chunks(QIODevice &ioDevice);
+    Chunks(QObject *parent);
+    Chunks(QIODevice &ioDevice, QObject *parent);
     bool setIODevice(QIODevice &ioDevice);
+
+    //append data to last chank
+    bool appendChunk(const QByteArray &data);
 
     // Getting data out of Chunks
     QByteArray data(qint64 pos=0, qint64 count=-1, QByteArray *highlighted=0);

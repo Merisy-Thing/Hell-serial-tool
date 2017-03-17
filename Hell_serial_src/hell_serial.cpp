@@ -328,23 +328,26 @@ void hell_serial::readSerialData()
         ui->pte_out_ascii_mode->insertPlainText(QString(data));
         ui->pte_out_ascii_mode->verticalScrollBar()->setValue(ui->pte_out_ascii_mode->verticalScrollBar()->maximum());
     }
-    m_hex_edit->insert(m_hex_edit->dataSize(), data);
+    //m_hex_edit->insert(m_hex_edit->dataSize(), data);
+    m_hex_edit->appendData(data);
+    /*
     if(m_hex_edit->dataSize() > buffer_len) {
         int num = ((m_hex_edit->dataSize() - buffer_len)/16)*16;
         if(num > 0) {
             m_hex_edit->remove(0, num);
         }
         qDebug("m_hex_edit->dataSize():%d", m_hex_edit->dataSize());
-    }
-    m_hex_edit->scrollToBottom();
+    }*/
+    #warning "Fixme"
+    //m_hex_edit->scrollToBottom();
 
     if(record_file.isOpen()) {
         record_file.write(data);
     }
 
     //qDebug("ascii num=%d", ui->pte_out_ascii_mode->blockCount());
-
-    ui->lb_dbg->setText(QString("%1").arg(m_hex_edit->dataSize()));
+#warning "Fixme"
+    //ui->lb_dbg->setText(QString("%1").arg(m_hex_edit->dataSize()));
 }
 
 void hell_serial::keyPressEvent ( QKeyEvent * event )
@@ -395,8 +398,8 @@ void hell_serial::moveEvent(QMoveEvent * e)
 
 void hell_serial::on_pb_clear_clicked()
 {
-    m_hex_edit->remove(0, m_hex_edit->dataSize());
-
+    //m_hex_edit->remove(0, m_hex_edit->dataSize());
+#warning "Fixme"
     ui->pte_out_ascii_mode->clear();
     ui->lb_dbg->setText("0");
 }
@@ -417,9 +420,11 @@ void hell_serial::on_pb_save_raw_data_clicked()
             return;
         }
     } else {
+        #warning "Fixme"
+        /*
         if(m_hex_edit->dataSize() == 0) {
             return;
-        }
+        }*/
         raw_data = m_hex_edit->data();
     }
 
