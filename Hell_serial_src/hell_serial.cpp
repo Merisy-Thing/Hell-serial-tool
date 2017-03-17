@@ -245,6 +245,7 @@ void hell_serial::hex_edit_init()
 
     m_hex_edit->setReadOnly(true);
     m_hex_edit->setAddressArea(false);
+    m_hex_edit->setHighlighting(false);
 }
 
 
