@@ -54,10 +54,10 @@ bool Chunks::appendChunk(const QByteArray &data)
 
     chunk.data = data;
     chunk.dataChanged.clear();
-    chunk.absPos = 0;
+    chunk.absPos = _size;
 
     _chunks.push_back(chunk);
-
+    _size += data.size();
     return true;
 }
 

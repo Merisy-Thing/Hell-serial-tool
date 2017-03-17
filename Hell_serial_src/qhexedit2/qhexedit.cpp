@@ -233,7 +233,13 @@ QByteArray QHexEdit::data()
 
 bool QHexEdit::appendData(const QByteArray &data)
 {
-    return _chunks->appendChunk(data);
+    bool ret = _chunks->appendChunk(data);
+    if(ret) {
+        adjust();
+        ensureVisible();
+        //viewport()->update();
+    }
+    return ret;
 }
 
 void QHexEdit::setHighlighting(bool highlighting)
