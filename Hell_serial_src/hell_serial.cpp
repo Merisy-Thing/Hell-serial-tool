@@ -430,11 +430,9 @@ void hell_serial::on_pb_save_raw_data_clicked()
             return;
         }
     } else {
-        #warning "Fixme"
-        /*
-        if(m_hex_edit->dataSize() == 0) {
+        if(m_hex_edit->getDataSize() == 0) {
             return;
-        }*/
+        }
         raw_data = m_hex_edit->data();
     }
 
@@ -703,7 +701,6 @@ void hell_serial::on_pb_mode_switch_clicked()
         ui->pb_mode_switch->setText("ASCII Mode");
         m_hex_edit->setVisible(true);
         ui->pte_out_ascii_mode->setVisible(false);
-        ui->pte_out_ascii_mode->clear();
 
         this->setMaximumWidth(WG_MAXIMUM_WIDTH);
         this->setWindowFlags(windowFlags() & (~Qt::WindowMaximizeButtonHint));

@@ -245,8 +245,8 @@ bool QHexEdit::appendData(const QByteArray &data)
     bool ret = _chunks->appendChunk(data);
     if(ret) {
         adjust();
-        ensureVisible();
-        //viewport()->update();
+        //ensureVisible();
+        viewport()->update();
     }
     return ret;
 }
@@ -944,8 +944,8 @@ void QHexEdit::paintEvent(QPaintEvent *event)
         painter.drawRect(QRect(_pxCursorX0 - pxOfsX, _pxCursorY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight));
         painter.setPen(QColor(00,210,00, 255));
         if (_editAreaIsAscii) {
-            QByteArray ba = _dataShown.mid((_cursorPosition - _bPosFirst) / 2, 1);
-#warning "FIXME"
+            QByteArray ba = _dataShown.mid((_cursorPosition/2 - _bPosFirst), 1);
+
             if (ba != "")
             {
                 int ch = ba[0], h, l;
