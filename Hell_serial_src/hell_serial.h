@@ -86,6 +86,8 @@ private:
     bool is_ascii_mode;
     QString m_last_script;
 
+    QSize m_last_dlg_size;
+
     QList<custom_cmd_item *> m_custom_cmd_item_list;
 
     LuaPlugin *m_LuaPlugin;
@@ -102,6 +104,7 @@ private:
 protected:
     void keyPressEvent ( QKeyEvent * event );
     void moveEvent(QMoveEvent * e);
+    void resizeEvent(QResizeEvent *event);
     bool nativeEvent(const QByteArray & eventType, void * message, long * result);
 };
 

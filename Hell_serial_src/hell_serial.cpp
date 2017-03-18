@@ -1,6 +1,6 @@
 #include "hell_serial.h"
 #include "ui_hell_serial.h"
-
+#include <QApplication>
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -98,6 +98,7 @@ hell_serial::~hell_serial()
         m_setting_file->setValue("LastScriptFile", m_last_script);
         m_setting_file->setValue("LastRecordFile", m_record_file_name);
         m_setting_file->setValue("LastPortName", m_last_port_name);
+        m_setting_file->setValue("LastDlgSize", m_last_dlg_size);
         m_setting_file->endGroup();
 
         m_setting_file->sync();
@@ -216,6 +217,11 @@ void hell_serial::ui_init()
         m_last_script = m_setting_file->value("LastScriptFile").toString();
         m_record_file_name = m_setting_file->value("LastRecordFile").toString();
         m_last_port_name = m_setting_file->value("LastPortName").toString();
+        m_last_dlg_size = m_setting_file->value("LastDlgSize").toSize();
+        if(!m_last_dlg_size.isValid()) {
+            m_last_dlg_size = QSize(this->width(), this->height());
+        }
+
         m_setting_file->endGroup();
     } else {
         if(setting_file.open(QIODevice::WriteOnly)) {
@@ -389,6 +395,12 @@ void hell_serial::moveEvent(QMoveEvent * e)
         } else {
             m_LuaPlugin->move(e->pos().x() + this->width()+8, e->pos().y() - 30);
         }
+    }
+}
+void hell_serial::resizeEvent(QResizeEvent *event)
+{
+    if(is_ascii_mode) {
+        m_last_dlg_size = event->size();
     }
 }
 
@@ -702,7 +714,11 @@ void hell_serial::on_pb_mode_switch_clicked()
         ui->pte_out_ascii_mode->setPlainText(QString(m_hex_edit->data()));
         ui->pte_out_ascii_mode->verticalScrollBar()->setValue(ui->pte_out_ascii_mode->verticalScrollBar()->maximum());
         ui->pte_out_ascii_mode->setVisible(true);
+
         this->setMaximumWidth(QWIDGETSIZE_MAX);
+        int iTitleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);  // 获取标题栏高度
+        this->setGeometry(x(), y()+iTitleBarHeight, m_last_dlg_size.width(), m_last_dlg_size.height());
+
         this->setWindowFlags(this->windowFlags() | Qt::WindowMaximizeButtonHint);
     }
     this->show();

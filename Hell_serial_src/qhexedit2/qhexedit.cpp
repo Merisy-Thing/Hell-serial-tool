@@ -945,6 +945,7 @@ void QHexEdit::paintEvent(QPaintEvent *event)
         painter.setPen(QColor(00,210,00, 255));
         if (_editAreaIsAscii) {
             QByteArray ba = _dataShown.mid((_cursorPosition - _bPosFirst) / 2, 1);
+#warning "FIXME"
             if (ba != "")
             {
                 int ch = ba[0], h, l;
