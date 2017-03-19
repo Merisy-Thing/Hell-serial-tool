@@ -955,11 +955,22 @@ void hell_serial::on_pb_script_send_clicked(bool checked)
 
 void hell_serial::on_pb_plugin_dlg_clicked()
 {
+    QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
     if(m_LuaPlugin->isVisible()) {
         m_LuaPlugin->setVisible(false);
+        int iTitleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);  // 获取标题栏高度
+        this->move( pos.x() + m_LuaPlugin->width()/2, pos.y()-iTitleBarHeight);
     } else {
-        QPoint pos = QWidget::mapToGlobal(QPoint(0,0));
-        m_LuaPlugin->move( pos.x() + this->width()+8, pos.y()-30);
+        int iTitleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);  // 获取标题栏高度
+        int x = pos.x() - m_LuaPlugin->width()/2;
+        int delta = 0;
+        if(x <0) {
+            delta += x;
+            x = 0;
+        }
+        this->move( x, pos.y()-iTitleBarHeight);
+
+        m_LuaPlugin->move(pos.x() + this->width()- m_LuaPlugin->width()/2 + 3 - delta, pos.y()-iTitleBarHeight);
         m_LuaPlugin->setVisible(true);
     }
 }
@@ -1025,5 +1036,12 @@ void hell_serial::on_cb_baudrate_activated(const QString &text)
         ui->cb_baudrate->setCurrentText("");
     } else {
         ui->cb_baudrate->setEditable(false);
+    }
+}
+
+void hell_serial::on_cb_port_name_currentIndexChanged(const QString &arg1)
+{
+    if(this->isVisible()) {
+        on_pb_port_ctrl_clicked();
     }
 }

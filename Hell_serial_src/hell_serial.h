@@ -55,6 +55,7 @@ private slots:
     void on_pb_script_send_clicked(bool checked);
     void on_pb_plugin_dlg_clicked();
     void on_cb_baudrate_activated(const QString &text);
+    void on_cb_port_name_currentIndexChanged(const QString &arg1);
 
 private:
     Ui::hell_serial *ui;
