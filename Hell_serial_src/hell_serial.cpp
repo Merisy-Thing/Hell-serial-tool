@@ -113,15 +113,6 @@ void hell_serial::ui_init()
     QString string;
     QStringList string_list;
 
-    //Port name list
-    string = "COM%1";
-    //for(int i=1; i<29; i++) {
-    //    ui->cb_port_name->insertItem(i,string.arg(i));
-    //}
-    detect_serial_port(false);
-    ui->cb_port_name->setMaxVisibleItems(15);
-    ui->cb_port_name->setCurrentIndex(0);
-
     //Baud Rate Type
     string_list <<  "2400"   <<  "4800"  <<  "9600"  <<  "14400" <<  "19200"
                 <<  "38400"  <<  "56000" <<  "57600" <<  "76800" <<  "115200"
@@ -189,6 +180,26 @@ void hell_serial::ui_init()
 
     connect(ui->dw_cmd_tools, SIGNAL(topLevelChanged(bool)), this, SLOT(cmdToolBoxTopLevelChanged(bool)));
 
+
+    ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
+    //ui->cb_custom_cmd_list->view()->setFixedWidth(580);
+    //ui->cb_addon_module_list->view()->setFixedWidth(196);
+
+    read_setting_file();
+
+    ui->cb_port_name->setMaxVisibleItems(15);
+    ui->cb_port_name->setCurrentIndex(0);
+
+    m_LuaPlugin = new LuaPlugin(m_setting_file, this);
+    m_LuaPlugin->setVisible(false);
+    m_LuaPlugin->setModal(false);
+
+    detect_serial_port(false);
+}
+
+void hell_serial::read_setting_file()
+{
+
     QFile setting_file(CUSTOM_CMD_FILE_NAME);
     if(setting_file.exists()) {
         m_setting_file = new QSettings(CUSTOM_CMD_FILE_NAME, QSettings::IniFormat);
@@ -235,16 +246,7 @@ void hell_serial::ui_init()
     if(m_custom_cmd_string_list.size() > 0) {
         ui->cb_custom_cmd_list->addItems(m_custom_cmd_string_list);
     }
-
-    ui->cb_custom_cmd_list->setMaxVisibleItems(MAX_CUSTOM_CMD_NUM);
-    ui->cb_custom_cmd_list->view()->setFixedWidth(580);
-    //ui->cb_addon_module_list->view()->setFixedWidth(196);
-
-    m_LuaPlugin = new LuaPlugin(m_setting_file, this);
-    m_LuaPlugin->setVisible(false);
-    m_LuaPlugin->setModal(false);
 }
-
 void hell_serial::hex_edit_init()
 {
     m_hex_edit = new QHexEdit;
@@ -988,12 +990,14 @@ void hell_serial::detect_serial_port(bool port_opened)
         list.push_back(info.portName());
     }
     list.sort();
-    ui->cb_port_name->addItems(list);
-    if(port_opened) {
+    if(!port_opened) {
         if(list.contains(m_last_port_name)) {
             ui->cb_port_name->setCurrentText(m_last_port_name);
+            list.move(list.indexOf(m_last_port_name), 0);
         }
     }
+    ui->cb_port_name->addItems(list);
+
 }
 
 bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long * result)

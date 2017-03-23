@@ -62,6 +62,7 @@ private:
 
     void ui_init();
     void hex_edit_init();
+    void read_setting_file();
 
     QSerialPort *m_qserial_port;
     QString m_last_port_name;

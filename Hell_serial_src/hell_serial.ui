@@ -210,8 +210,11 @@
      </item>
      <item>
       <widget class="QCheckBox" name="chb_AutoRepeat">
+       <property name="toolTip">
+        <string>Enable auto repeat</string>
+       </property>
        <property name="text">
-        <string>AutoRepeat</string>
+        <string/>
        </property>
       </widget>
      </item>
