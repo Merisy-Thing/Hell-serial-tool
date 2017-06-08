@@ -430,6 +430,13 @@ S:second</string>
       <widget class="QComboBox" name="cb_buffer_len"/>
      </item>
      <item>
+      <widget class="QCheckBox" name="cb_time_stamp">
+       <property name="text">
+        <string>Stamp</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pb_mode_switch">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
@@ -451,11 +458,17 @@ S:second</string>
      </item>
      <item>
       <widget class="QPushButton" name="pb_always_visible">
+       <property name="maximumSize">
+        <size>
+         <width>56</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
        <property name="text">
-        <string>Always visible</string>
+        <string>Top</string>
        </property>
       </widget>
      </item>

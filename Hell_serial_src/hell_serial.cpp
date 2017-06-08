@@ -334,11 +334,16 @@ void hell_serial::readSerialData()
     }
 
     if(is_ascii_mode) {
-        //qDebug("is_ascii_mode");
+        QString ascii;
+        if(ui->cb_time_stamp->isChecked() && data.contains('\n')) {
+            QTime ctm = QTime::currentTime();
+            ascii = QString("\t[%1:%2:%3.%4]").arg(ctm.hour()).arg(ctm.minute()).arg(ctm.second()).arg(ctm.msec());
+        }
+        ascii = QString(data) + ascii;
         QTextCursor cursor = ui->pte_out_ascii_mode->textCursor();
         cursor.movePosition(QTextCursor::End);
         ui->pte_out_ascii_mode->setTextCursor(cursor);
-        ui->pte_out_ascii_mode->insertPlainText(QString(data));
+        ui->pte_out_ascii_mode->insertPlainText(ascii);
         ui->pte_out_ascii_mode->verticalScrollBar()->setValue(ui->pte_out_ascii_mode->verticalScrollBar()->maximum());
     }
     //m_hex_edit->insert(m_hex_edit->dataSize(), data);
@@ -507,12 +512,12 @@ void hell_serial::on_pb_always_visible_clicked()
         //hide();
         setWindowFlags(this->windowFlags() & (~Qt::WindowStaysOnTopHint));
         show();
-        ui->pb_always_visible->setText(tr("Always visible"));
+        ui->pb_always_visible->setText(tr("Top"));
     } else {
         //hide();
         setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
         show();
-        ui->pb_always_visible->setText(tr("unAlways"));
+        ui->pb_always_visible->setText(tr("Nor"));
     }
 }
 
@@ -1014,14 +1019,14 @@ bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long
 
             detect_serial_port(port_opened);
 
-            if(port_opened) {
+            if(!port_opened) {
                 for(int i=0; i<ui->cb_port_name->count(); i++) {
                     if(ui->cb_port_name->itemText(i) == port_name) {
                         port_removed = false;
                     }
                 }
                 if(port_removed) {
-                    on_pb_port_ctrl_clicked();
+                    //on_pb_port_ctrl_clicked();
                 } else {
                     ui->cb_port_name->setCurrentText(port_name);
                 }
@@ -1045,7 +1050,7 @@ void hell_serial::on_cb_baudrate_activated(const QString &text)
 
 void hell_serial::on_cb_port_name_currentIndexChanged(const QString &arg1)
 {
-    if(this->isVisible()) {
+    if(this->isVisible() && (!m_qserial_port->isOpen())) {
         on_pb_port_ctrl_clicked();
     }
 }
