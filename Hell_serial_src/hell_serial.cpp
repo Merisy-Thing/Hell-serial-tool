@@ -334,16 +334,21 @@ void hell_serial::readSerialData()
     }
 
     if(is_ascii_mode) {
-        QString ascii;
-        if(ui->cb_time_stamp->isChecked() && data.contains('\n')) {
-            QTime ctm = QTime::currentTime();
-            ascii = QString("\t[%1:%2:%3.%4]").arg(ctm.hour()).arg(ctm.minute()).arg(ctm.second()).arg(ctm.msec());
-        }
-        ascii = QString(data) + ascii;
+
         QTextCursor cursor = ui->pte_out_ascii_mode->textCursor();
+        if(ui->cb_time_stamp->isChecked() && (data.size() > 1) && (data.endsWith('\r') || data.endsWith('\n')) ) {
+            QTime ctm = QTime::currentTime();
+            QString stamp;
+            stamp.sprintf("[%02d:%02d:%02d.%03d] ", ctm.hour(), ctm.minute(), ctm.second(), ctm.msec());//= QString("[%1:%2:%3.%4] ")
+            cursor.movePosition(QTextCursor::End);
+            cursor.movePosition(QTextCursor::StartOfLine);
+            ui->pte_out_ascii_mode->setTextCursor(cursor);
+            ui->pte_out_ascii_mode->insertPlainText(stamp);
+        }
+
         cursor.movePosition(QTextCursor::End);
         ui->pte_out_ascii_mode->setTextCursor(cursor);
-        ui->pte_out_ascii_mode->insertPlainText(ascii);
+        ui->pte_out_ascii_mode->insertPlainText(QString(data));
         ui->pte_out_ascii_mode->verticalScrollBar()->setValue(ui->pte_out_ascii_mode->verticalScrollBar()->maximum());
     }
     //m_hex_edit->insert(m_hex_edit->dataSize(), data);
@@ -619,14 +624,15 @@ bool hell_serial::hex_send(const QString &_cmd)
     }
 
     //remove space char
-    cmd.remove(QChar(' '), Qt::CaseSensitive);
+    //cmd.remove(QChar(' '), Qt::CaseSensitive);
+    cmd.remove(QRegExp("\\W"));
     if(cmd.isEmpty()) {
         return false;
     }
 
     //odd number
     if(cmd.size() & 1) {
-        //qDebug("Odd:%s", cmd.toLatin1().data());
+        //qDebug("Odd:%s, size=%d", cmd.toLatin1().data(), cmd.size());
         QMessageBox::warning(this, tr("Error"), tr("Invalid data length, [Odd] length!"), QMessageBox::Yes );
         return false;
     }

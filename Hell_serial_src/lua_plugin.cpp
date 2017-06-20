@@ -127,6 +127,13 @@ void LuaPlugin::on_pb_browse_plugin_file_clicked()
 
 void LuaPlugin::on_pb_load_plugin_file_clicked()
 {
+    if(m_luaTextChanged) {
+        if(QMessageBox::question(this, tr("Warning"), tr("File not save, Confirm to load?"),
+                                 QMessageBox::Yes | QMessageBox::No) == QMessageBox::No){
+            return;
+        }
+    }
+
     QFile file(ui->cb_plugin_file_list->currentText());
     if(!file.exists()) {
         return;
