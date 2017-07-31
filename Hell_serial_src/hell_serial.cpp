@@ -916,10 +916,6 @@ bool hell_serial::loop_process(QString &line_data, QFile &file)
 void hell_serial::on_pb_script_send_clicked(bool checked)
 {
     Q_UNUSED(checked);
-    if(!m_qserial_port->isOpen()) {
-        QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
-        return;
-    }
 
     QString input_file;
     QString curr_file = ui->cb_custom_cmd_list->currentText();
@@ -934,6 +930,12 @@ void hell_serial::on_pb_script_send_clicked(bool checked)
     if(!file.exists()) {
         return;
     }
+
+    if(!m_qserial_port->isOpen()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Port not open!"), QMessageBox::Yes );
+        return;
+    }
+
     m_last_script = input_file;
     add_custom_cmd_to_list("file://" + input_file);
 
@@ -1054,9 +1056,3 @@ void hell_serial::on_cb_baudrate_activated(const QString &text)
     }
 }
 
-void hell_serial::on_cb_port_name_currentIndexChanged(const QString &arg1)
-{
-    if(this->isVisible() && (!m_qserial_port->isOpen())) {
-        on_pb_port_ctrl_clicked();
-    }
-}
