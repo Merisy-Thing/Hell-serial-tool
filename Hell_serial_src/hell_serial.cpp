@@ -1003,14 +1003,15 @@ void hell_serial::detect_serial_port(bool port_opened)
         list.push_back(info.portName());
     }
     list.sort();
-    if(!port_opened) {
+    if(port_opened) {
         if(list.contains(m_last_port_name)) {
             ui->cb_port_name->setCurrentText(m_last_port_name);
             list.move(list.indexOf(m_last_port_name), 0);
+        } else {
+            on_pb_port_ctrl_clicked();
         }
     }
     ui->cb_port_name->addItems(list);
-
 }
 
 bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long * result)
@@ -1022,24 +1023,8 @@ bool hell_serial::nativeEvent(const QByteArray & eventType, void * message, long
         if (((MSG *)message)->wParam == DBT_DEVNODES_CHANGED) {
             //qDebug("detect_serial_port");
             bool port_opened = m_qserial_port->isOpen();
-            QString port_name = m_qserial_port->portName();
-            bool port_removed = true;
 
             detect_serial_port(port_opened);
-
-            if(!port_opened) {
-                for(int i=0; i<ui->cb_port_name->count(); i++) {
-                    if(ui->cb_port_name->itemText(i) == port_name) {
-                        port_removed = false;
-                    }
-                }
-                if(port_removed) {
-                    //on_pb_port_ctrl_clicked();
-                } else {
-                    ui->cb_port_name->setCurrentText(port_name);
-                }
-            }
-
         }
     }
 #endif
